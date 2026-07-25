@@ -1,3 +1,4 @@
+
 import os
 script_dir = os.path.dirname(os.path.abspath(__file__))
 import re
@@ -12,40 +13,7 @@ file_path = sys.argv[1]
 version = file_path.split("/")[-1].split("v")[-1].replace(".", "_")
 antlr_path = sys.argv[2]
 
-lexer_rules = {
-    "Or": "|",
-    "And": "&",
-    "Iff": "<=>",
-    "Impl": "=>",
-    "If": "<=",
-    "Niff": "<~>",
-    "Nor": "~|",
-    "Nand": "~&",
-    "Not": "~",
-    "ForallComb": "!!",
-    "TyForall": "!>",
-    "Infix_inequality": "!=",
-    "Infix_equality": "=",
-    "Forall": "!",
-    "ExistsComb": "??",
-    "TyExists": "?*",
-    "Exists": "?",
-    "Lambda": "^",
-    "ChoiceComb": "@@+",
-    "Choice": "@+",
-    "DescriptionComb": "@@-",
-    "Description": "@-",
-    "EqComb": "@=",
-    "App": "@",
-    "Assignment": "",
-    "Identical": "==",
-    "Arrow": ">",
-    "Star": "*",
-    "Plus": "+",
-    "Hash": "#",
-    "Subtype_sign": "<<",
-    "Gentzen_arrow": "-->",
-}
+lexer_rules = {'Or': '|', 'And': '&', 'Iff': '<=>', 'Impl': '=>', 'If': '<=', 'Niff': '<~>', 'Nor': '~|', 'Nand': '~&', 'Not': '~', 'ForallComb': '!!', 'TyForall': '!>', 'Infix_inequality': '!=', 'Infix_equality': '=', 'Forall': '!', 'ExistsComb': '??', 'TyExists': '?*', 'Exists': '?', 'Lambda': '^', 'ChoiceComb': '@@+', 'Choice': '@+', 'DescriptionComb': '@@-', 'Description': '@-', 'EqComb': '@=', 'App': '@', 'Assignment': '', 'Identical': '==', 'Arrow': '>', 'Star': '*', 'Plus': '+', 'Hash': '#', 'Subtype_sign': '<<', 'Gentzen_arrow': '-->'}
 
 
 def get_optional_rules():
@@ -84,6 +52,10 @@ Comment_line : '%' ~[\r\n]* -> skip;
 Comment_block : '/*' .*? '*/' -> skip;
 """
     
+    
+    
+   
+
     for line in lexer_rules.split("\n"):
         if line != "":
             new_lines.append(line.strip())
@@ -95,7 +67,7 @@ Comment_block : '/*' .*? '*/' -> skip;
 
     file.close()
 
-
+  
 def clean_up(bnf_lines):
     cleaned_bnf_text = []
     
@@ -163,10 +135,10 @@ def another_clean_up(raw_lines):
                 
     return raw_lines
 
-
-# comment is %
+#comment is %
 def convert_comment(line):
     return "//" + line
+
 
 
 # semantic rule is :==
@@ -219,6 +191,8 @@ def remove_quotes(line):
         return line.replace("''", "")
     else:
         return line
+
+
 
 
 #~ CONVERT RULES
@@ -319,35 +293,42 @@ def convert_lexer_rule(line):
     return before_line + " : " + after_line + ";"
 
 
-# token rule is :::
-def convert_character_classes(line):
+# character class rule is :::
+def convert_character_classes(line, parser_character_classes):
+    character_class_name = line.split(":::")[0].strip()
+    character_class_name = character_class_name.replace(">", "")
+    character_class_name = character_class_name.replace("<", "")
+    # ANTLR parser rules cannot reference lexer fragments. Keep only character
+    # classes referenced directly by ::= rules as tokens; all other ::: rules
+    # are lexer-internal building blocks.
+    rule_prefix = "" if character_class_name in parser_character_classes else "fragment "
     
     if line.startswith("<viewable_char>"):
-        return r"Viewable_char : '.\n';"
+        return rule_prefix + r"Viewable_char : '.\n';"
     elif line.startswith("<slosh_char>"):
-        return r"Slosh_char : '\\\\';"
+        return rule_prefix + r"Slosh_char : '\\\\';"
     elif line.startswith("<single_quote>"):
-        return r"Single_quote : '\'';"
+        return rule_prefix + r"Single_quote : '\'';"
     elif line.startswith("<not_star_slash>"):
-        return r"Not_star_slash : (~'*')* '**' ~('/' | '*')*;"
+        return rule_prefix + r"Not_star_slash : (~'*')* '**' ~('/' | '*')*;"
     elif line.startswith("<do_char>"):
-        return r"fragment Do_char : [\u0020-\u0021\u0023-\u005B\u005D-\u007E] | '\\'[" + '"\\\\];'
+        return rule_prefix + r"Do_char : [\u0020-\u0021\u0023-\u005B\u005D-\u007E] | '\\'[" + '"\\\\];'
     elif line.startswith("<sq_char>"):
-        return r"fragment Sq_char : [\u0020-\u0026\u0028-\u005B\u005D-\u007E] | '\\\\' | '\\\'';"
+        return rule_prefix + r"Sq_char : [\u0020-\u0026\u0028-\u005B\u005D-\u007E] | '\\\\' | '\\\'';"
     elif line.startswith("<sign>"):
-        return r"fragment Sign : [+-];"
+        return rule_prefix + r"Sign : [+-];"
     elif line.startswith("<exponent>"):
-        return r"fragment Exponent : [Ee];"
+        return rule_prefix + r"Exponent : [Ee];"
     elif line.startswith("<non_zero_numeric>"):
-        return r"fragment Non_zero_numeric : [1-9];"
+        return rule_prefix + r"Non_zero_numeric : [1-9];"
     elif line.startswith("<numeric>"):
-        return r"fragment Numeric : [0-9];"
+        return rule_prefix + r"Numeric : [0-9];"
     elif line.startswith("<lower_alpha>"):
-        return r"fragment Lower_alpha : [a-z];"
+        return rule_prefix + r"Lower_alpha : [a-z];"
     elif line.startswith("<upper_alpha>"):
-        return r"fragment Upper_alpha : [A-Z];"
+        return rule_prefix + r"Upper_alpha : [A-Z];"
     elif line.startswith("<alpha_numeric>"):
-        return r"fragment Alpha_numeric : Lower_alpha | Upper_alpha | Numeric | '_';"
+        return rule_prefix + r"Alpha_numeric : Lower_alpha | Upper_alpha | Numeric | '_';"
     elif line.startswith("<comment_line>"):
         return "///"
     elif line.startswith("<comment_block>"):
@@ -368,7 +349,27 @@ def convert_character_classes(line):
     first_char = before_line[0].upper()
     before_line = first_char + before_line[1:]
     
-    return before_line + " : " + after_line + ";"
+    return rule_prefix + before_line + " : " + after_line + ";"
+
+
+def get_parser_character_classes(bnf_lines):
+    """Find ::: character classes referenced directly by ::= parser rules."""
+    character_classes = set()
+    parser_references = set()
+
+    for line in bnf_lines:
+        if line.startswith("%"):
+            continue
+
+        if ":::" in line:
+            match = re.match(r"<([^>]+)>", line)
+            if match:
+                character_classes.add(match.group(1))
+        elif "::=" in line:
+            right_hand_side = line.split("::=", 1)[1]
+            parser_references.update(re.findall(r"<([^>]+)>", right_hand_side))
+
+    return character_classes.intersection(parser_references)
 
 
 def replace_capitals(lines):
@@ -376,19 +377,14 @@ def replace_capitals(lines):
     lexer_rules = []
     
     for line in lines:
-        if line[0].isupper():
-            lexer_rules.append(line.split(":")[0].strip().lower())
+        stripped_line = line.strip()
+        if stripped_line.startswith("fragment "):
+            rule_name = stripped_line[len("fragment "):].split(":")[0].strip()
+            lexer_rules.append(rule_name.lower())
+        elif stripped_line and stripped_line[0].isupper():
+            lexer_rules.append(stripped_line.split(":")[0].strip().lower())
             
     lexer_rules.append("comment_line")
-    lexer_rules.append("do_char")
-    lexer_rules.append("sq_char")
-    lexer_rules.append("sign")
-    lexer_rules.append("exponent")
-    lexer_rules.append("non_zero_numeric")
-    lexer_rules.append("numeric")
-    lexer_rules.append("lower_alpha")
-    lexer_rules.append("upper_alpha")
-    lexer_rules.append("alpha_numeric")
             
     pattern = r'\b(' + '|'.join(re.escape(word) for word in lexer_rules) + r')\b'
     
@@ -410,6 +406,7 @@ def get_all_semantic_rules(bnf_lines):
 
 def main():
     
+    
     bnf_lines = read_bnf_file(file_path)
     antlr_lines = []
     token_rules = []
@@ -420,6 +417,7 @@ def main():
     
     # run a clean up
     bnf_lines = clean_up(bnf_lines)
+    parser_character_classes = get_parser_character_classes(bnf_lines)
     # bnf_lines = another_clean_up(bnf_lines)
     grammar_count = 0
     errCount = 0 
@@ -449,9 +447,12 @@ def main():
             token_rules.append(bnf_line)
             # antlr_lines.append(bnf_line)
             
-        # token rule is :::
+        # character class rule is :::
         elif  ":::" in bnf_lines[index]:
-            bnf_line = convert_character_classes(bnf_lines[index])
+            bnf_line = convert_character_classes(
+                bnf_lines[index],
+                parser_character_classes
+            )
             token_rules.append(bnf_line)
             # antlr_lines.append(bnf_line)
             
@@ -479,7 +480,7 @@ def main():
         write_antlr_file(antlr_lines)
         # write_antlr_file(antlr_lines, f"TPTP")
         print("bnf to antlr conversion complete")
-
+        
 def is_empty_line(line):
     return line.strip() == ""
 main()
