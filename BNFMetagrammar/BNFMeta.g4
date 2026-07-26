@@ -1,9 +1,8 @@
-grammar SyntaxBNF;
+grammar BNFMeta;
 
 // Meta-grammar for the TPTP SyntaxBNF notation.
 //
 // IMPORTANT: SyntaxBNF uses two different right-hand-side sublanguages.
-//
 // The main differences between the two sublanguages are:
 //
 // 1. Parentheses and square brackets
@@ -11,7 +10,7 @@ grammar SyntaxBNF;
 //    In syntactic (::=) and semantic (:==) rules, they are normally literal
 //    punctuation in the TPTP language being defined:
 //
-//      Line 45:
+//      Line 45 (SyntaxBNF-v9.2.1.4):
 //      <tpi_annotated> ::= tpi(<name>,<formula_role>,<tpi_formula><annotations>).
 //
 //      Line 142:

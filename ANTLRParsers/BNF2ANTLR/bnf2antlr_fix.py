@@ -1,4 +1,6 @@
 
+"""Incremental fixes to the original line-oriented converter."""
+
 import os
 script_dir = os.path.dirname(os.path.abspath(__file__))
 import re
