@@ -874,6 +874,16 @@ class TPTPVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by TPTPParser#typeable_atom.
+    def visitTypeable_atom(self, ctx:TPTPParser.Typeable_atomContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by TPTPParser#atomic_type.
+    def visitAtomic_type(self, ctx:TPTPParser.Atomic_typeContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by TPTPParser#type_constant.
     def visitType_constant(self, ctx:TPTPParser.Type_constantContext):
         return self.visitChildren(ctx)
@@ -889,13 +899,8 @@ class TPTPVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by TPTPParser#atom.
-    def visitAtom(self, ctx:TPTPParser.AtomContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by TPTPParser#untyped_atom.
-    def visitUntyped_atom(self, ctx:TPTPParser.Untyped_atomContext):
+    # Visit a parse tree produced by TPTPParser#system_type.
+    def visitSystem_type(self, ctx:TPTPParser.System_typeContext):
         return self.visitChildren(ctx)
 
 
@@ -1006,26 +1011,6 @@ class TPTPVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by TPTPParser#file_info.
     def visitFile_info(self, ctx:TPTPParser.File_infoContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by TPTPParser#theory.
-    def visitTheory(self, ctx:TPTPParser.TheoryContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by TPTPParser#theory_name.
-    def visitTheory_name(self, ctx:TPTPParser.Theory_nameContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by TPTPParser#creator_source.
-    def visitCreator_source(self, ctx:TPTPParser.Creator_sourceContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by TPTPParser#creator_name.
-    def visitCreator_name(self, ctx:TPTPParser.Creator_nameContext):
         return self.visitChildren(ctx)
 
 

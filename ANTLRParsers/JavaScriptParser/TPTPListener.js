@@ -1562,6 +1562,24 @@ export default class TPTPListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by TPTPParser#typeable_atom.
+	enterTypeable_atom(ctx) {
+	}
+
+	// Exit a parse tree produced by TPTPParser#typeable_atom.
+	exitTypeable_atom(ctx) {
+	}
+
+
+	// Enter a parse tree produced by TPTPParser#atomic_type.
+	enterAtomic_type(ctx) {
+	}
+
+	// Exit a parse tree produced by TPTPParser#atomic_type.
+	exitAtomic_type(ctx) {
+	}
+
+
 	// Enter a parse tree produced by TPTPParser#type_constant.
 	enterType_constant(ctx) {
 	}
@@ -1589,21 +1607,12 @@ export default class TPTPListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
-	// Enter a parse tree produced by TPTPParser#atom.
-	enterAtom(ctx) {
+	// Enter a parse tree produced by TPTPParser#system_type.
+	enterSystem_type(ctx) {
 	}
 
-	// Exit a parse tree produced by TPTPParser#atom.
-	exitAtom(ctx) {
-	}
-
-
-	// Enter a parse tree produced by TPTPParser#untyped_atom.
-	enterUntyped_atom(ctx) {
-	}
-
-	// Exit a parse tree produced by TPTPParser#untyped_atom.
-	exitUntyped_atom(ctx) {
+	// Exit a parse tree produced by TPTPParser#system_type.
+	exitSystem_type(ctx) {
 	}
 
 
@@ -1802,42 +1811,6 @@ export default class TPTPListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by TPTPParser#file_info.
 	exitFile_info(ctx) {
-	}
-
-
-	// Enter a parse tree produced by TPTPParser#theory.
-	enterTheory(ctx) {
-	}
-
-	// Exit a parse tree produced by TPTPParser#theory.
-	exitTheory(ctx) {
-	}
-
-
-	// Enter a parse tree produced by TPTPParser#theory_name.
-	enterTheory_name(ctx) {
-	}
-
-	// Exit a parse tree produced by TPTPParser#theory_name.
-	exitTheory_name(ctx) {
-	}
-
-
-	// Enter a parse tree produced by TPTPParser#creator_source.
-	enterCreator_source(ctx) {
-	}
-
-	// Exit a parse tree produced by TPTPParser#creator_source.
-	exitCreator_source(ctx) {
-	}
-
-
-	// Enter a parse tree produced by TPTPParser#creator_name.
-	enterCreator_name(ctx) {
-	}
-
-	// Exit a parse tree produced by TPTPParser#creator_name.
-	exitCreator_name(ctx) {
 	}
 
 

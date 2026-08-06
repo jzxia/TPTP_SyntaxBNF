@@ -1565,6 +1565,24 @@ class TPTPListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by TPTPParser#typeable_atom.
+    def enterTypeable_atom(self, ctx:TPTPParser.Typeable_atomContext):
+        pass
+
+    # Exit a parse tree produced by TPTPParser#typeable_atom.
+    def exitTypeable_atom(self, ctx:TPTPParser.Typeable_atomContext):
+        pass
+
+
+    # Enter a parse tree produced by TPTPParser#atomic_type.
+    def enterAtomic_type(self, ctx:TPTPParser.Atomic_typeContext):
+        pass
+
+    # Exit a parse tree produced by TPTPParser#atomic_type.
+    def exitAtomic_type(self, ctx:TPTPParser.Atomic_typeContext):
+        pass
+
+
     # Enter a parse tree produced by TPTPParser#type_constant.
     def enterType_constant(self, ctx:TPTPParser.Type_constantContext):
         pass
@@ -1592,21 +1610,12 @@ class TPTPListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by TPTPParser#atom.
-    def enterAtom(self, ctx:TPTPParser.AtomContext):
+    # Enter a parse tree produced by TPTPParser#system_type.
+    def enterSystem_type(self, ctx:TPTPParser.System_typeContext):
         pass
 
-    # Exit a parse tree produced by TPTPParser#atom.
-    def exitAtom(self, ctx:TPTPParser.AtomContext):
-        pass
-
-
-    # Enter a parse tree produced by TPTPParser#untyped_atom.
-    def enterUntyped_atom(self, ctx:TPTPParser.Untyped_atomContext):
-        pass
-
-    # Exit a parse tree produced by TPTPParser#untyped_atom.
-    def exitUntyped_atom(self, ctx:TPTPParser.Untyped_atomContext):
+    # Exit a parse tree produced by TPTPParser#system_type.
+    def exitSystem_type(self, ctx:TPTPParser.System_typeContext):
         pass
 
 
@@ -1805,42 +1814,6 @@ class TPTPListener(ParseTreeListener):
 
     # Exit a parse tree produced by TPTPParser#file_info.
     def exitFile_info(self, ctx:TPTPParser.File_infoContext):
-        pass
-
-
-    # Enter a parse tree produced by TPTPParser#theory.
-    def enterTheory(self, ctx:TPTPParser.TheoryContext):
-        pass
-
-    # Exit a parse tree produced by TPTPParser#theory.
-    def exitTheory(self, ctx:TPTPParser.TheoryContext):
-        pass
-
-
-    # Enter a parse tree produced by TPTPParser#theory_name.
-    def enterTheory_name(self, ctx:TPTPParser.Theory_nameContext):
-        pass
-
-    # Exit a parse tree produced by TPTPParser#theory_name.
-    def exitTheory_name(self, ctx:TPTPParser.Theory_nameContext):
-        pass
-
-
-    # Enter a parse tree produced by TPTPParser#creator_source.
-    def enterCreator_source(self, ctx:TPTPParser.Creator_sourceContext):
-        pass
-
-    # Exit a parse tree produced by TPTPParser#creator_source.
-    def exitCreator_source(self, ctx:TPTPParser.Creator_sourceContext):
-        pass
-
-
-    # Enter a parse tree produced by TPTPParser#creator_name.
-    def enterCreator_name(self, ctx:TPTPParser.Creator_nameContext):
-        pass
-
-    # Exit a parse tree produced by TPTPParser#creator_name.
-    def exitCreator_name(self, ctx:TPTPParser.Creator_nameContext):
         pass
 
 

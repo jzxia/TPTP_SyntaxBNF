@@ -197,7 +197,6 @@ int yywrap(void) {
 %token <ival> _DLR_tff
 %token <ival> _DLR_thf
 %token <ival> _LIT_cnf
-%token <ival> _LIT_creator
 %token <ival> _LIT_file
 %token <ival> _LIT_fof
 %token <ival> _LIT_include
@@ -205,7 +204,6 @@ int yywrap(void) {
 %token <ival> _LIT_introduced
 %token <ival> _LIT_tcf
 %token <ival> _LIT_tff
-%token <ival> _LIT_theory
 %token <ival> _LIT_thf
 %token <ival> _LIT_tpi
 %token <ival> _LIT_unknown
@@ -417,7 +415,7 @@ thf_formula_list    : thf_logic_formula {$<pval>$ = P_BUILD("thf_formula_list", 
                     | thf_logic_formula COMMA thf_formula_list {$<pval>$ = P_BUILD("thf_formula_list", $<pval>1, P_TOKEN("COMMA ", $<ival>2), $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
-thf_atom_typing : untyped_atom COLON thf_top_level_type {$<pval>$ = P_BUILD("thf_atom_typing", $<pval>1, P_TOKEN("COLON ", $<ival>2), $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
+thf_atom_typing : typeable_atom COLON thf_top_level_type {$<pval>$ = P_BUILD("thf_atom_typing", $<pval>1, P_TOKEN("COLON ", $<ival>2), $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     | LPAREN thf_atom_typing RPAREN {$<pval>$ = P_BUILD("thf_atom_typing", P_TOKEN("LPAREN ", $<ival>1), $<pval>2, P_TOKEN("RPAREN ", $<ival>3),NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
@@ -449,7 +447,7 @@ thf_union_type : thf_unitary_type plus thf_unitary_type {$<pval>$ = P_BUILD("thf
                     | thf_union_type plus thf_unitary_type {$<pval>$ = P_BUILD("thf_union_type", $<pval>1, P_TOKEN("plus ", $<ival>2), $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
-thf_subtype : untyped_atom subtype_sign atom {$<pval>$ = P_BUILD("thf_subtype", $<pval>1, $<pval>2, $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
+thf_subtype : atomic_type subtype_sign atomic_type {$<pval>$ = P_BUILD("thf_subtype", $<pval>1, $<pval>2, $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
 thf_definition : thf_atomic_formula identical thf_logic_formula {$<pval>$ = P_BUILD("thf_definition", $<pval>1, $<pval>2, $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
@@ -606,7 +604,7 @@ tff_arguments       : tff_term {$<pval>$ = P_BUILD("tff_arguments", $<pval>1,NUL
                     | tff_term COMMA tff_arguments {$<pval>$ = P_BUILD("tff_arguments", $<pval>1, P_TOKEN("COMMA ", $<ival>2), $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
-tff_atom_typing : untyped_atom COLON tff_top_level_type {$<pval>$ = P_BUILD("tff_atom_typing", $<pval>1, P_TOKEN("COLON ", $<ival>2), $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
+tff_atom_typing : typeable_atom COLON tff_top_level_type {$<pval>$ = P_BUILD("tff_atom_typing", $<pval>1, P_TOKEN("COLON ", $<ival>2), $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     | LPAREN tff_atom_typing RPAREN {$<pval>$ = P_BUILD("tff_atom_typing", P_TOKEN("LPAREN ", $<ival>1), $<pval>2, P_TOKEN("RPAREN ", $<ival>3),NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
@@ -657,7 +655,7 @@ tff_type_list : tff_top_level_type {$<pval>$ = P_BUILD("tff_type_list", $<pval>1
                     | tff_top_level_type COMMA tff_type_list {$<pval>$ = P_BUILD("tff_type_list", $<pval>1, P_TOKEN("COMMA ", $<ival>2), $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
-tff_subtype : untyped_atom subtype_sign atom {$<pval>$ = P_BUILD("tff_subtype", $<pval>1, $<pval>2, $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
+tff_subtype : atomic_type subtype_sign atomic_type {$<pval>$ = P_BUILD("tff_subtype", $<pval>1, $<pval>2, $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
 txf_definition : tff_atomic_formula identical tff_term {$<pval>$ = P_BUILD("txf_definition", $<pval>1, $<pval>2, $<pval>3,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
@@ -910,6 +908,15 @@ assignment : COLON_EQUALS {$<pval>$ = P_BUILD("assignment", P_TOKEN("COLON_EQUAL
 identical : EQUALS_EQUALS {$<pval>$ = P_BUILD("identical", P_TOKEN("EQUALS_EQUALS ", $<ival>1),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
+typeable_atom : constant {$<pval>$ = P_BUILD("typeable_atom", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
+                    | distinct_object {$<pval>$ = P_BUILD("typeable_atom", P_TOKEN("distinct_object ", $<ival>1),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
+                    ;
+
+atomic_type : typeable_atom {$<pval>$ = P_BUILD("atomic_type", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
+                    | defined_constant {$<pval>$ = P_BUILD("atomic_type", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
+                    | system_type {$<pval>$ = P_BUILD("atomic_type", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
+                    ;
+
 type_constant : type_functor {$<pval>$ = P_BUILD("type_constant", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
@@ -919,12 +926,7 @@ type_functor : atomic_word {$<pval>$ = P_BUILD("type_functor", $<pval>1,NULL,NUL
 defined_type : atomic_defined_word {$<pval>$ = P_BUILD("defined_type", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
-atom : untyped_atom {$<pval>$ = P_BUILD("atom", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
-                    | defined_constant {$<pval>$ = P_BUILD("atom", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
-                    ;
-
-untyped_atom : constant {$<pval>$ = P_BUILD("untyped_atom", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
-                    | system_constant {$<pval>$ = P_BUILD("untyped_atom", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
+system_type : atomic_system_word {$<pval>$ = P_BUILD("system_type", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
 defined_infix_pred : infix_equality {$<pval>$ = P_BUILD("defined_infix_pred", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
@@ -996,8 +998,6 @@ intro_type : atomic_word {$<pval>$ = P_BUILD("intro_type", $<pval>1,NULL,NULL,NU
                     ;
 
 external_source : file_source {$<pval>$ = P_BUILD("external_source", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
-                    | theory {$<pval>$ = P_BUILD("external_source", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
-                    | creator_source {$<pval>$ = P_BUILD("external_source", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
 file_source : _LIT_file LPAREN file_name file_info RPAREN {$<pval>$ = P_BUILD("file_source", P_TOKEN("_LIT_file ", $<ival>1), P_TOKEN("LPAREN ", $<ival>2), $<pval>3, $<pval>4, P_TOKEN("RPAREN ", $<ival>5),NULL,NULL,NULL,NULL,NULL);}
@@ -1005,18 +1005,6 @@ file_source : _LIT_file LPAREN file_name file_info RPAREN {$<pval>$ = P_BUILD("f
 
 file_info : COMMA name {$<pval>$ = P_BUILD("file_info", P_TOKEN("COMMA ", $<ival>1), $<pval>2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     | nothing {$<pval>$ = P_BUILD("file_info", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
-                    ;
-
-theory : _LIT_theory LPAREN theory_name optional_info RPAREN {$<pval>$ = P_BUILD("theory", P_TOKEN("_LIT_theory ", $<ival>1), P_TOKEN("LPAREN ", $<ival>2), $<pval>3, $<pval>4, P_TOKEN("RPAREN ", $<ival>5),NULL,NULL,NULL,NULL,NULL);}
-                    ;
-
-theory_name : atomic_word {$<pval>$ = P_BUILD("theory_name", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
-                    ;
-
-creator_source : _LIT_creator LPAREN creator_name COMMA useful_info COMMA parents RPAREN {$<pval>$ = P_BUILD("creator_source", P_TOKEN("_LIT_creator ", $<ival>1), P_TOKEN("LPAREN ", $<ival>2), $<pval>3, P_TOKEN("COMMA ", $<ival>4), $<pval>5, P_TOKEN("COMMA ", $<ival>6), $<pval>7, P_TOKEN("RPAREN ", $<ival>8),NULL,NULL);}
-                    ;
-
-creator_name : atomic_word {$<pval>$ = P_BUILD("creator_name", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
 parents : LBRKT RBRKT {$<pval>$ = P_BUILD("parents", P_TOKEN("LBRKT ", $<ival>1), P_TOKEN("RBRKT ", $<ival>2),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
