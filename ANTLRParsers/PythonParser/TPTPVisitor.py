@@ -234,6 +234,16 @@ class TPTPVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by TPTPParser#thf_fof_function.
+    def visitThf_fof_function(self, ctx:TPTPParser.Thf_fof_functionContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by TPTPParser#thf_arguments.
+    def visitThf_arguments(self, ctx:TPTPParser.Thf_argumentsContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by TPTPParser#thf_formula_list.
     def visitThf_formula_list(self, ctx:TPTPParser.Thf_formula_listContext):
         return self.visitChildren(ctx)
