@@ -350,6 +350,7 @@ thf_infix_unary : thf_unitary_term infix_inequality thf_unitary_term {$<pval>$ =
 thf_atomic_formula : thf_plain_atomic {$<pval>$ = P_BUILD("thf_atomic_formula", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     | thf_defined_atomic {$<pval>$ = P_BUILD("thf_atomic_formula", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     | thf_system_atomic {$<pval>$ = P_BUILD("thf_atomic_formula", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
+                    | thf_fof_function {$<pval>$ = P_BUILD("thf_atomic_formula", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
 thf_plain_atomic : constant {$<pval>$ = P_BUILD("thf_plain_atomic", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
@@ -409,6 +410,13 @@ thf_conn_term : nonassoc_connective {$<pval>$ = P_BUILD("thf_conn_term", $<pval>
 
 thf_tuple : LBRKT RBRKT {$<pval>$ = P_BUILD("thf_tuple", P_TOKEN("LBRKT ", $<ival>1), P_TOKEN("RBRKT ", $<ival>2),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     | LBRKT thf_formula_list RBRKT {$<pval>$ = P_BUILD("thf_tuple", P_TOKEN("LBRKT ", $<ival>1), $<pval>2, P_TOKEN("RBRKT ", $<ival>3),NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
+                    ;
+
+thf_fof_function : defined_functor LPAREN thf_arguments RPAREN {$<pval>$ = P_BUILD("thf_fof_function", $<pval>1, P_TOKEN("LPAREN ", $<ival>2), $<pval>3, P_TOKEN("RPAREN ", $<ival>4),NULL,NULL,NULL,NULL,NULL,NULL);}
+                    | system_functor LPAREN thf_arguments RPAREN {$<pval>$ = P_BUILD("thf_fof_function", $<pval>1, P_TOKEN("LPAREN ", $<ival>2), $<pval>3, P_TOKEN("RPAREN ", $<ival>4),NULL,NULL,NULL,NULL,NULL,NULL);}
+                    ;
+
+thf_arguments : thf_formula_list {$<pval>$ = P_BUILD("thf_arguments", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
 thf_formula_list    : thf_logic_formula {$<pval>$ = P_BUILD("thf_formula_list", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}

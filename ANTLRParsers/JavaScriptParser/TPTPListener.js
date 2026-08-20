@@ -410,6 +410,24 @@ export default class TPTPListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by TPTPParser#thf_fof_function.
+	enterThf_fof_function(ctx) {
+	}
+
+	// Exit a parse tree produced by TPTPParser#thf_fof_function.
+	exitThf_fof_function(ctx) {
+	}
+
+
+	// Enter a parse tree produced by TPTPParser#thf_arguments.
+	enterThf_arguments(ctx) {
+	}
+
+	// Exit a parse tree produced by TPTPParser#thf_arguments.
+	exitThf_arguments(ctx) {
+	}
+
+
 	// Enter a parse tree produced by TPTPParser#thf_formula_list.
 	enterThf_formula_list(ctx) {
 	}

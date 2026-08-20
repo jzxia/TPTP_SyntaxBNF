@@ -413,6 +413,24 @@ class TPTPListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by TPTPParser#thf_fof_function.
+    def enterThf_fof_function(self, ctx:TPTPParser.Thf_fof_functionContext):
+        pass
+
+    # Exit a parse tree produced by TPTPParser#thf_fof_function.
+    def exitThf_fof_function(self, ctx:TPTPParser.Thf_fof_functionContext):
+        pass
+
+
+    # Enter a parse tree produced by TPTPParser#thf_arguments.
+    def enterThf_arguments(self, ctx:TPTPParser.Thf_argumentsContext):
+        pass
+
+    # Exit a parse tree produced by TPTPParser#thf_arguments.
+    def exitThf_arguments(self, ctx:TPTPParser.Thf_argumentsContext):
+        pass
+
+
     # Enter a parse tree produced by TPTPParser#thf_formula_list.
     def enterThf_formula_list(self, ctx:TPTPParser.Thf_formula_listContext):
         pass
