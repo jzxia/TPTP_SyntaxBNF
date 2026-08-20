@@ -10,23 +10,23 @@ grammar BNFMeta;
 //    In syntactic (::=) and semantic (:==) rules, they are normally literal
 //    punctuation in the TPTP language being defined:
 //
-//      Line 45 (SyntaxBNF-v9.2.1.4):
+//      Line 45 (SyntaxBNF-v9.3.0.3):
 //      <tpi_annotated> ::= tpi(<name>,<formula_role>,<tpi_formula><annotations>).
 //
 //      Line 142:
 //      <thf_tuple> ::= [] | [<thf_formula_list>]
 //
-//      Line 300:
+//      Line 303:
 //      <ntf_semantics_spec> :==
 //          <ntf_logic_name> <identical> [<ntf_logic_spec_list>]
 //
 //    In token (::-) and character-class macro (:::) rules, parentheses group
 //    regular expressions and square brackets delimit character sets:
 //
-//      Line 654:
+//      Line 651:
 //      <real> ::- (<signed_real>|<unsigned_real>)
 //
-//      Line 673:
+//      Line 670:
 //      <vline> ::: [|]
 //
 // 2. Postfix *, +, and ?
@@ -35,28 +35,28 @@ grammar BNFMeta;
 //    nonterminal. Otherwise *, +, and ? are literal terminal punctuation:
 //
 //      Line 38:  <TPTP_file> ::= <TPTP_input>*
-//      Line 426: <th0_quantifier> ::= ^ | @+ | @-
-//      Line 428: <type_quantifier> ::= !> | ?*
+//      Line 429: <th0_quantifier> ::= ^ | @+ | @-
+//      Line 431: <type_quantifier> ::= !> | ?*
 //
 //    In ::- and ::: rules, *, +, and ? are regular-expression quantifiers
 //    when they follow a regex primary. Inside a character set they are literal:
 //
-//      Line 634:
+//      Line 631:
 //      <single_quoted> ::- <single_quote><sq_char><sq_char>*<single_quote>
 //
-//      Line 674:
+//      Line 671:
 //      <star> ::: [*]
 //
 // 3. Curly braces
 //
 //    In ::= and :== rules, curly braces are literal TPTP punctuation:
 //
-//      Line 290:
+//      Line 293:
 //      <ntf_connective_name> :== $box | $dia | {$necessary} | {$possible} | ...
 //
 //    In ::- and ::: rules, {name} is a lexer-macro reference:
 //
-//      Line 683:
+//      Line 680:
 //      <comment_block> :::
 //          {slash_char}{star}<not_star_slash>{star}{star}*{slash_char}
 //
@@ -66,8 +66,8 @@ grammar BNFMeta;
 //    A syntactic rule uses <vline> for a literal vertical bar, while a regex
 //    puts the literal character in a character set:
 //
-//      Line 436: <assoc_connective> ::= <vline> | &
-//      Line 673: <vline> ::: [|]
+//      Line 439: <assoc_connective> ::= <vline> | &
+//      Line 670: <vline> ::: [|]
 //
 // These contextual differences are why the parser below has separate
 // syntaxExpression and regexExpression rule families.
@@ -123,18 +123,18 @@ ruleName
 //    The NONTERMINAL STAR alternative in syntaxElement handles this case.
 //
 // 2. Literal terminal punctuation in a ::= or :== expression:
-//      Line 428: <type_quantifier> ::= !> | ?*
+//      Line 431: <type_quantifier> ::= !> | ?*
 //    Here * is part of the literal TPTP operator ?*, not repetition, because
 //    it does not immediately follow a nonterminal. syntaxTerminal accepts it.
 //
 // 3. A postfix regular-expression quantifier in a ::- or ::: expression:
-//      Line 634: <single_quoted> ::-
+//      Line 631: <single_quoted> ::-
 //                    <single_quote><sq_char><sq_char>*<single_quote>
 //    regexQuantifier handles this case.
 //
 // 4. A literal character inside a regular-expression character set:
-//      Line 674: <star> ::: [*]
-//      Line 684: <not_star_slash> ::: ([^*]*[*][*]*[^/*])*[^*]*
+//      Line 671: <star> ::: [*]
+//      Line 681: <not_star_slash> ::: ([^*]*[*][*]*[^/*])*[^*]*
 //    characterSetElement accepts STAR as set content, so stars inside [...]
 //    are not parsed as postfix quantifiers.
 //
@@ -224,7 +224,7 @@ regexLiteral
     ;
 
 // PERCENT is allowed inside a character set.
-// Example from SyntaxBNF-v9.2.1.4:
+// Example from SyntaxBNF-v9.3.0.3:
 //   <percentage_sign>      ::: [%]
 commentLine
     : PERCENT (~NEWLINE)* lineEnd
