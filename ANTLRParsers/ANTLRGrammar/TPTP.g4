@@ -65,17 +65,11 @@ Viewable_char : '.\n';
 
 
 //%-------------------------------------------------------------------------------------------------- 
-//% v9.3.0.1 - Removed fi_ roles, added datatype, codatatype, datatype_constructor, and 
-//%            codatatype_constructor. 
-//% v9.3.0.2 - Renamed <untyped_atom> to <typeable_atom> 
-//%          - Added <typeable_atom>        ::= <constant> | <Distinct_object> 
-//%                  <atomic_type>          ::= <typeable_atom> | <defined_constant> | <system_type> 
-//%          - Fixed <thf_subtype>          ::= <atomic_type> <subtype_sign> <atomic_type> 
-//%                  <tff_subtype>          ::= <atomic_type> <subtype_sign> <atomic_type> 
-//% v9.3.0.3 - Removed <theory>, which is now part of <internal_source> 
-//%          - Removed <creator_source>, because I can't recal what it was for 
-//% v9.3.0.4 - Put back <thf_fof_function> for only <defined_functor> and <system_functor>, so that  
-//%            things like $distinct() can be used in THF. That also needed <thf_arguments> 
+//% v9.3.1.1 - Damn, to make ITV work I have to allow <functor>(<thf_arguments>), but that's not for  
+//%            THF logic. Thus now it's ... 
+//%            <thf_fof_function>     ::= <defined_functor>(<thf_arguments>) |  
+//%                                       <system_functor>(<thf_arguments>) | 
+//%                                       <functor>(<thf_arguments>) 
 //%-------------------------------------------------------------------------------------------------- 
 //%----README ... this header provides important meta- and usage information 
 //%---- 
@@ -150,7 +144,7 @@ thf_binary_nonassoc : thf_unit_formula nonassoc_connective thf_unit_formula;
 thf_binary_assoc : thf_or_formula  |  thf_and_formula  |  thf_apply_formula;
 thf_or_formula : thf_unit_formula Vline thf_unit_formula  |  thf_or_formula Vline thf_unit_formula;
 thf_and_formula : thf_unit_formula '&' thf_unit_formula  |  thf_and_formula '&' thf_unit_formula;
-//%----@ (denoting apply) is left-associative and lambda is right-associative. 
+//%----@ for THF applicative style is left-associative and lambda is right-associative. 
 //%----^ [X] : ^ [Y] : f @ g (where f is a <thf_apply_formula> and g is a <thf_unitary_formula>) 
 //%----should be parsed as: (^ [X] : (^ [Y] : f)) @ g. That is, g is not in the scope of either 
 //%----lambda. 
@@ -194,8 +188,9 @@ thf_conn_term : nonassoc_connective  |  assoc_connective  |  infix_equality  |  
 //%----Note that syntactically this allows (p @ =), but for = the first argument must be known to 
 //%----infer the type of =, so that's not allowed, i.e., only (= @ p). 
 thf_tuple : '[]'  |  '['thf_formula_list']';
-//%----Allows first-order style in THF for $words, e.g., $distinct. 
-thf_fof_function : defined_functor'('thf_arguments')'  |  system_functor'('thf_arguments')';
+//%----Allows first-order functional style in THF for $words, e.g., $distinct. Damn, to make ITV 
+//%----work I have to allow <functor>(<thf_arguments>), but that's not for THF logic. 
+thf_fof_function : defined_functor'('thf_arguments')'  |  system_functor'('thf_arguments')'  |   functor'('thf_arguments')';
 //%----Arguments recurse back up to formulae (this is the THF world here) 
 thf_arguments : thf_formula_list;
 thf_formula_list : thf_logic_formula comma_thf_logic_formula*;
@@ -469,8 +464,9 @@ system_type : atomic_system_word;
 //<defined_proposition>  :== $true | $false 
 //<defined_predicate>    :== <atomic_defined_word> 
 //<defined_predicate>    :== $distinct | $less | $lesseq | $greater | $greatereq | $is_int | $is_rat 
-//%----$distinct is part of the TXF and THF languages. $distinct takes one or more terms of the  
-//%----same type as arguments, and indicates that the arguments are pairwise !=. 
+//%----$distinct is part of the TXF and THF languages. $distinct is always written in functional  
+//%----form, even in THF. It takes one or more terms of the same type as arguments, and indicates  
+//%----that the arguments are pairwise !=. 
 defined_infix_pred : infix_equality;
 //<system_proposition>   :== <system_predicate> 
 //<system_predicate>     :== <atomic_system_word> 
