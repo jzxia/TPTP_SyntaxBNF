@@ -70,6 +70,7 @@ Viewable_char : '.\n';
 //%            <thf_fof_function>     ::= <defined_functor>(<thf_arguments>) |  
 //%                                       <system_functor>(<thf_arguments>) | 
 //%                                       <functor>(<thf_arguments>) 
+//% v9.3.1.2 - Fixed typos in comments (thanks to Jiazhen) 
 //%-------------------------------------------------------------------------------------------------- 
 //%----README ... this header provides important meta- and usage information 
 //%---- 
@@ -130,10 +131,10 @@ formula_role : Lower_word  |  Lower_word'-'general_term;
 //%----"axiom"(-like) formulae. A problem is solved only when all "conjecture"s are proven. 
 //%----"negated_conjecture"s are formed from negation of a "conjecture" (usually in a FOF to CNF 
 //%----conversion). "plain"s have no specified user semantics. "interpretation"s record all aspects 
-//%----of an interpretation. "type"s defines the type globally for one symbol. unknown"s have unknown 
-//%----role, and this is an error situation. The <general_term> subroles are used in various ways, 
-//%----including but not limited to: "domains" and "mappings" for "interpretation"s; "datatype",  
-//%----"codatatype", "datatype_constructor", and "codatatype_constructor" for "type"s. 
+//%----of an interpretation. "type"s defines the type globally for one symbol. "unknown"s have  
+//%----unknown role, and this is an error situation. The <general_term> subroles are used in various  
+//%----ways, including but not limited to: "domains" and "mappings" for "interpretation"s;  
+//%----"datatype", codatatype", "datatype_constructor", and "codatatype_constructor" for "type"s. 
 //%-------------------------------------------------------------------------------------------------- 
 //%----THF formulae. 
 thf_formula : thf_logic_formula  |  thf_atom_typing  |  thf_subtype;
@@ -579,9 +580,9 @@ name : atomic_word  |  Integer;
 atomic_word : Lower_word  |  Single_quoted  |  Back_quoted;
 //%----<Single_quoted>s are the enclosed <atomic_word> without the quotes. Therefore the <Lower_word> 
 //%----<atomic_word> cat and the <Single_quoted> <atomic_word> 'cat' are the same, but <numbers>s and 
-//%----<variable>s are not <Lower_word>s, so 123' and 123, and 'X' and X, are different. Quotes can 
-//%----be removed from a <Single_quoted> <atomic_word>, and is recommended if doing so produces a 
-//%----<Lower_word> <atomic_word>. 
+//%----<variable>s are not <Lower_word>s, so '123' is different from 123, and 'X' is different from  
+//%----X. Quotes can be removed from a <Single_quoted> <atomic_word>, and is recommended if doing so  
+//%----produces a Lower_word> <atomic_word>. 
 atomic_defined_word : Dollar_word;
 atomic_system_word : Dollar_dollar_word;
 number : Integer  |  Rational  |  Real;
@@ -626,8 +627,8 @@ nothing : ;
 //%----A string that matches both <defined_comment> and <comment> should be recognized as 
 //%----<defined_comment>, so put these before <comment>. Defined comments that are in use include: 
 //%----    TO BE ANNOUNCED 
-//%----System comments are a convention used for annotations that may used as additional input to a 
-//%----specific system. They look like comments, but start with %$$ or /*$$. A wily user of the 
+//%----System comments are a convention used for annotations that may be used as additional input to 
+//%----a specific system. They look like comments, but start with %$$ or /*$$. A wily user of the 
 //%----syntax can notice the $$ and extract information from the "comment" and pass that on as input 
 //%----to the system. The specific system for which the information is intended should be identified 
 //%----after the $$, e.g., /*$$Otter 3.3: Demodulator */ To extract these separately from regular 
@@ -640,6 +641,6 @@ nothing : ;
 //%----Character classes 
 //%---Space and visible characters upto ~, except ' and \ 
 //%----<Printable_char> is any printable ASCII character, codes 32 (space) to 126 (tilde). 
-//%----<Printable_char> does not include tabs, newlines, bells, etc. The use of . does not not 
-//%----exclude tab, so this is a bit loose. 
+//%----<Printable_char> does not include tabs, newlines, bells, etc. The use of . allows 
+//%----tab, so this is a bit loose. 
 //%-------------------------------------------------------------------------------------------------- 

@@ -5,6 +5,8 @@
 %                                       <system_functor>(<thf_arguments>) |
 %                                       <functor>(<thf_arguments>)
 % v9.3.1.2 - Fixed typos in comments (thanks to Jiazhen)
+%          - Changed { and } to < and > in ...
+%            <comment_block>        ::: <slash_char><star><not_star_slash><star><star>*<slash_char>
 %--------------------------------------------------------------------------------------------------
 %----README ... this header provides important meta- and usage information
 %----
@@ -682,7 +684,7 @@
 %----For lex/yacc there cannot be spaces on either side of the | here
 <comment>              ::- <comment_line>|<comment_block>
 <comment_line>         ::- <percentage_sign><printable_char>*
-<comment_block>        ::: {slash_char}{star}<not_star_slash>{star}{star}*{slash_char}
+<comment_block>        ::: <slash_char><star><not_star_slash><star><star>*<slash_char>
 <not_star_slash>       ::: ([^*]*[*][*]*[^/*])*[^*]*
 %----Defined comments are a convention used for annotations that are used as additional input for
 %----systems. They look like comments, but start with %$ or /*$. A wily user of the syntax can

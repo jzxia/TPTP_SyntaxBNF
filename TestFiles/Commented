@@ -14,5 +14,3 @@ fof(freddy,axiom,
 /*----Comment in start*/fof(refutation,derived,
     ( $false )   ).
 
-#----comment with #
-fof(last,axiom,p3).
