@@ -210,7 +210,7 @@ def extract_definitions(document: Any) -> list[Definition]:
         ("syntacticRule", "::=", "syntaxExpression"),
         ("semanticRule", ":==", "syntaxExpression"),
         ("tokenRule", "::-", "regexExpression"),
-        ("characterClassRule", ":::", "regexExpression"),
+        ("lexerMacroRule", ":::", "regexExpression"),
     )
 
     for item in document.documentItem():
@@ -531,14 +531,6 @@ class GrammarConverter:
                 for element in character_set.characterSetElement()
             )
             return "[" + convert_octal_escapes(content) + "]"
-
-        macro = primary.macroReference()
-        if macro is not None:
-            macro_name = "".join(
-                element.getText()
-                for element in macro.macroReferenceElement()
-            )
-            return lexer_rule_name(macro_name)
 
         literal = primary.regexLiteral().getText()
         if literal == ".":
