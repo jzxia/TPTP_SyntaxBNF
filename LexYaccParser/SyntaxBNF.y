@@ -414,6 +414,7 @@ thf_tuple : LBRKT RBRKT {$<pval>$ = P_BUILD("thf_tuple", P_TOKEN("LBRKT ", $<iva
 
 thf_fof_function : defined_functor LPAREN thf_arguments RPAREN {$<pval>$ = P_BUILD("thf_fof_function", $<pval>1, P_TOKEN("LPAREN ", $<ival>2), $<pval>3, P_TOKEN("RPAREN ", $<ival>4),NULL,NULL,NULL,NULL,NULL,NULL);}
                     | system_functor LPAREN thf_arguments RPAREN {$<pval>$ = P_BUILD("thf_fof_function", $<pval>1, P_TOKEN("LPAREN ", $<ival>2), $<pval>3, P_TOKEN("RPAREN ", $<ival>4),NULL,NULL,NULL,NULL,NULL,NULL);}
+                    | functor LPAREN thf_arguments RPAREN {$<pval>$ = P_BUILD("thf_fof_function", $<pval>1, P_TOKEN("LPAREN ", $<ival>2), $<pval>3, P_TOKEN("RPAREN ", $<ival>4),NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
 thf_arguments : thf_formula_list {$<pval>$ = P_BUILD("thf_arguments", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}

@@ -48,7 +48,7 @@ itv_bundle: pre_bundle
 pre_bundle: javascript_parser
 	@echo "---- Copy   TPTP*.js to static/js"
 	cp ANTLRParsers/JavaScriptParser/TPTP*.js $(TPTP_HOME)/ServiceTools/IDVDir/BuildBundles/js
-	@echo "---- Copied TPTP*.js to static/js"
+	@echo "---- Copied TPTP*.js to ServiceTools/IDVDir/BuildBundles/js"
 	sed -i -e "s/import antlr4 from 'antlr4';/import antlr4 from '.\/antlr4.js';/" $(TPTP_HOME)/ServiceTools/IDVDir/BuildBundles/js/TPTP*.js
 	@echo "---- Hacked path in static/js/TPTP*.js"
 

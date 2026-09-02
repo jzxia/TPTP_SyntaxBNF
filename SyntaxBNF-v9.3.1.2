@@ -1,15 +1,12 @@
 %--------------------------------------------------------------------------------------------------
-% v9.3.0.1 - Removed fi_ roles, added datatype, codatatype, datatype_constructor, and
-%            codatatype_constructor.
-% v9.3.0.2 - Renamed <untyped_atom> to <typeable_atom>
-%          - Added <typeable_atom>        ::= <constant> | <distinct_object>
-%                  <atomic_type>          ::= <typeable_atom> | <defined_constant> | <system_type>
-%          - Fixed <thf_subtype>          ::= <atomic_type> <subtype_sign> <atomic_type>
-%                  <tff_subtype>          ::= <atomic_type> <subtype_sign> <atomic_type>
-% v9.3.0.3 - Removed <theory>, which is now part of <internal_source>
-%          - Removed <creator_source>, because I can't recal what it was for
-% v9.3.0.4 - Put back <thf_fof_function> for only <defined_functor> and <system_functor>, so that 
-%            things like $distinct() can be used in THF. That also needed <thf_arguments>
+% v9.3.1.1 - Damn, to make ITV work I have to allow <functor>(<thf_arguments>), but that's not for 
+%            THF logic. Thus now it's ...
+%            <thf_fof_function>     ::= <defined_functor>(<thf_arguments>) | 
+%                                       <system_functor>(<thf_arguments>) |
+%                                       <functor>(<thf_arguments>)
+% v9.3.1.2 - Fixed typos in comments (thanks to Jiazhen)
+%          - Changed { and } to < and > in ...
+%            <comment_block>        ::: <slash_char><star><not_star_slash><star><star>*<slash_char>
 %--------------------------------------------------------------------------------------------------
 %----README ... this header provides important meta- and usage information
 %----
@@ -75,10 +72,10 @@
 %----"axiom"(-like) formulae. A problem is solved only when all "conjecture"s are proven.
 %----"negated_conjecture"s are formed from negation of a "conjecture" (usually in a FOF to CNF
 %----conversion). "plain"s have no specified user semantics. "interpretation"s record all aspects
-%----of an interpretation. "type"s defines the type globally for one symbol. unknown"s have unknown
-%----role, and this is an error situation. The <general_term> subroles are used in various ways,
-%----including but not limited to: "domains" and "mappings" for "interpretation"s; "datatype", 
-%----"codatatype", "datatype_constructor", and "codatatype_constructor" for "type"s.
+%----of an interpretation. "type"s defines the type globally for one symbol. "unknown"s have 
+%----unknown role, and this is an error situation. The <general_term> subroles are used in various 
+%----ways, including but not limited to: "domains" and "mappings" for "interpretation"s; 
+%----"datatype", codatatype", "datatype_constructor", and "codatatype_constructor" for "type"s.
 %--------------------------------------------------------------------------------------------------
 %----THF formulae.
 <thf_formula>          ::= <thf_logic_formula> | <thf_atom_typing> | <thf_subtype>
@@ -92,7 +89,7 @@
                            <thf_or_formula> <vline> <thf_unit_formula>
 <thf_and_formula>      ::= <thf_unit_formula> & <thf_unit_formula> |
                            <thf_and_formula> & <thf_unit_formula>
-%----@ (denoting apply) is left-associative and lambda is right-associative.
+%----@ for THF applicative style is left-associative and lambda is right-associative.
 %----^ [X] : ^ [Y] : f @ g (where f is a <thf_apply_formula> and g is a <thf_unitary_formula>)
 %----should be parsed as: (^ [X] : (^ [Y] : f)) @ g. That is, g is not in the scope of either
 %----lambda.
@@ -143,8 +140,10 @@
 %----Note that syntactically this allows (p @ =), but for = the first argument must be known to
 %----infer the type of =, so that's not allowed, i.e., only (= @ p).
 <thf_tuple>            ::= [] | [<thf_formula_list>]
-%----Allows first-order style in THF for $words, e.g., $distinct.
-<thf_fof_function>     ::= <defined_functor>(<thf_arguments>) | <system_functor>(<thf_arguments>)
+%----Allows first-order functional style in THF for $words, e.g., $distinct. Damn, to make ITV
+%----work I have to allow <functor>(<thf_arguments>), but that's not for THF logic.
+<thf_fof_function>     ::= <defined_functor>(<thf_arguments>) | <system_functor>(<thf_arguments>) | 
+                           <functor>(<thf_arguments>) 
 %----Arguments recurse back up to formulae (this is the THF world here)
 <thf_arguments>        ::= <thf_formula_list>
 <thf_formula_list>     ::= <thf_logic_formula><comma_thf_logic_formula>*
@@ -610,9 +609,9 @@
 <atomic_word>          ::= <lower_word> | <single_quoted> | <back_quoted>
 %----<single_quoted>s are the enclosed <atomic_word> without the quotes. Therefore the <lower_word>
 %----<atomic_word> cat and the <single_quoted> <atomic_word> 'cat' are the same, but <numbers>s and
-%----<variable>s are not <lower_word>s, so 123' and 123, and 'X' and X, are different. Quotes can
-%----be removed from a <single_quoted> <atomic_word>, and is recommended if doing so produces a
-%----<lower_word> <atomic_word>.
+%----<variable>s are not <lower_word>s, so '123' is different from 123, and 'X' is different from 
+%----X. Quotes can be removed from a <single_quoted> <atomic_word>, and is recommended if doing so 
+%----produces a lower_word> <atomic_word>.
 <atomic_defined_word>  ::= <dollar_word>
 <atomic_system_word>   ::= <dollar_dollar_word>
 <number>               ::= <integer> | <rational> | <real>
@@ -685,7 +684,7 @@
 %----For lex/yacc there cannot be spaces on either side of the | here
 <comment>              ::- <comment_line>|<comment_block>
 <comment_line>         ::- <percentage_sign><printable_char>*
-<comment_block>        ::: {slash_char}{star}<not_star_slash>{star}{star}*{slash_char}
+<comment_block>        ::: <slash_char><star><not_star_slash><star><star>*<slash_char>
 <not_star_slash>       ::: ([^*]*[*][*]*[^/*])*[^*]*
 %----Defined comments are a convention used for annotations that are used as additional input for
 %----systems. They look like comments, but start with %$ or /*$. A wily user of the syntax can
@@ -698,8 +697,8 @@
 %----A string that matches both <defined_comment> and <comment> should be recognized as
 %----<defined_comment>, so put these before <comment>. Defined comments that are in use include:
 %----    TO BE ANNOUNCED
-%----System comments are a convention used for annotations that may used as additional input to a
-%----specific system. They look like comments, but start with %$$ or /*$$. A wily user of the
+%----System comments are a convention used for annotations that may be used as additional input to
+%----a specific system. They look like comments, but start with %$$ or /*$$. A wily user of the
 %----syntax can notice the $$ and extract information from the "comment" and pass that on as input
 %----to the system. The specific system for which the information is intended should be identified
 %----after the $$, e.g., /*$$Otter 3.3: Demodulator */ To extract these separately from regular
@@ -734,7 +733,7 @@
 <dollar>               ::: [$]
 <printable_char>       ::: .
 %----<printable_char> is any printable ASCII character, codes 32 (space) to 126 (tilde).
-%----<printable_char> does not include tabs, newlines, bells, etc. The use of . does not not
-%----exclude tab, so this is a bit loose.
+%----<printable_char> does not include tabs, newlines, bells, etc. The use of . allows
+%----tab, so this is a bit loose.
 <viewable_char>        ::: [.\n]
 %--------------------------------------------------------------------------------------------------
