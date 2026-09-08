@@ -2,7 +2,7 @@
 """Convert TPTP SyntaxBNF into an ANTLR4 combined grammar.
 
 Unlike the historical line-oriented converter, this program generates and
-uses a Python parser from BNFMetagrammar/BNFMeta.g4.  SyntaxBNF's four
+uses a Python parser from BNFMetagrammar/BNFMetaParser.g4.  SyntaxBNF's four
 definition operators are handled as follows:
 
 * ::= becomes an ANTLR parser rule.
@@ -28,7 +28,7 @@ from typing import Any, Iterable, Sequence
 
 SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 REPOSITORY_ROOT = SCRIPT_DIRECTORY.parents[1]
-DEFAULT_METAGRAMMAR = REPOSITORY_ROOT / "BNFMetagrammar" / "BNFMeta.g4"
+DEFAULT_METAGRAMMAR = REPOSITORY_ROOT / "BNFMetagrammar" / "BNFMetaParser.g4"
 DEFAULT_ANTLR_JAR = REPOSITORY_ROOT / "ANTLRParsers" / "antlr-4.13.2-complete.jar"
 
 NONTERMINAL_PATTERN = re.compile(r"^<([A-Za-z_][A-Za-z0-9_]*)>$")
@@ -42,7 +42,7 @@ class ConversionError(RuntimeError):
 
 @dataclass(frozen=True)
 class Definition:
-    """One definition parsed by BNFMeta.g4."""
+    """One definition parsed by BNFMetaParser.g4."""
 
     name: str
     operator: str
@@ -124,6 +124,9 @@ def generate_metaparser(
         raise ConversionError(f"metagrammar not found: {metagrammar}")
     if not antlr_jar.is_file():
         raise ConversionError(f"ANTLR jar not found: {antlr_jar}")
+    lexer_grammar = metagrammar.with_name("BNFMetaLexer.g4")
+    if not lexer_grammar.is_file():
+        raise ConversionError(f"metagrammar lexer not found: {lexer_grammar}")
 
     command = [
         "java",
@@ -134,6 +137,9 @@ def generate_metaparser(
         "-Xexact-output-dir",
         "-o",
         str(output_directory),
+        "-lib",
+        str(output_directory),
+        str(lexer_grammar),
         str(metagrammar),
     ]
     result = subprocess.run(command, text=True, capture_output=True, check=False)
@@ -152,8 +158,8 @@ def import_generated_metaparser(output_directory: Path) -> tuple[Any, Any]:
         parser_module = importlib.import_module("BNFMetaParser")
     except (ImportError, ModuleNotFoundError) as error:
         raise ConversionError(
-            "BNFMeta.g4 must declare 'grammar BNFMeta' so the generated "
-            "BNFMetaLexer and BNFMetaParser modules can be imported."
+            "BNFMetaParser.g4 must declare 'parser grammar BNFMetaParser' and use "
+            "BNFMetaLexer.g4 so the generated modules can be imported."
         ) from error
     return lexer_module.BNFMetaLexer, parser_module.BNFMetaParser
 
@@ -196,7 +202,7 @@ def parse_syntax_bnf(
                 f"  {input_path}:{message}" for message in diagnostics.messages
             )
             raise ConversionError(
-                "SyntaxBNF does not conform to BNFMeta.g4:\n" + formatted
+                f"SyntaxBNF does not conform to {metagrammar.name}:\n" + formatted
             )
 
         definitions = extract_definitions(tree)
@@ -526,17 +532,55 @@ class GrammarConverter:
         char_set = primary.charSet()
         if char_set.WILDCARD() is not None:
             return "."
-        content = "".join(
+        content = r"\-" if char_set.leadingDash is not None else ""
+        content += "".join(
             self.convert_character_set_element(element)
-            for element in char_set.characterSetElement()
+            for element in char_set.charSetElement()
         )
-        return "[" + content + "]"
+        content += r"\-" if char_set.trailingDash is not None else ""
+        if not content:
+            raise ConversionError(
+                f"line {char_set.start.line}: empty character set"
+            )
+        negation = "~" if char_set.charSetNegation() is not None else ""
+        return negation + "[" + content + "]"
 
     def convert_character_set_element(self, element: Any) -> str:
-        octal_escape = element.OCTAL_ESCAPE()
-        if octal_escape is not None:
-            return f"\\u{int(octal_escape.getText()[1:], 8):04X}"
-        return element.getText()
+        char_range = element.charSetRange()
+        if char_range is not None:
+            lower, upper = char_range.charSetCharacter()
+            if self.character_set_value(lower) > self.character_set_value(upper):
+                raise ConversionError(
+                    f"line {element.start.line}: descending character range "
+                    f"{char_range.getText()!r}"
+                )
+            return (
+                self.render_character_set_character(lower)
+                + "-"
+                + self.render_character_set_character(upper)
+            )
+        return self.render_character_set_character(element.charSetCharacter())
+
+    @staticmethod
+    def character_set_value(character: Any) -> str:
+        escape = character.charSetEscape()
+        if escape is None:
+            return character.getText()
+        octal = escape.octalDigits()
+        if octal is not None:
+            return chr(int(octal.getText(), 8))
+        quoted = escape.ESCAPED_CHARACTER().getText()
+        return "\n" if quoted == "n" else quoted
+
+    def render_character_set_character(self, character: Any) -> str:
+        value = self.character_set_value(character)
+        escape = character.charSetEscape()
+        if escape is not None and escape.octalDigits() is not None:
+            return f"\\u{ord(value):04X}"
+        return {
+            "\\": r"\\", "\n": r"\n", "\t": r"\t", "\r": r"\r",
+            "]": r"\]", "[": r"\u005B", "-": r"\-",
+        }.get(value, value)
 
 
 def format_rule(

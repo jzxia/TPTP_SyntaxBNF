@@ -1,4 +1,6 @@
-grammar BNFMeta;
+parser grammar BNFMetaParser;
+
+options { tokenVocab=BNFMetaLexer; }
 
 // Meta-grammar for the TPTP SyntaxBNF notation.
 //
@@ -97,7 +99,7 @@ ruleName : NONTERMINAL ;
 // 4. A literal character inside a regular-expression character set:
 //      <star> ::: [*]
 //      <not_star_slash> ::: ([^*]*[*][*]*[^/*])*[^*]*
-//    charSetElement accepts STAR as set content, so stars inside [...]
+//    charSetElement accepts literal stars as set content, so stars inside [...]
 //    are not parsed as postfix quantifiers.
 //
 // At the metagrammar level, an unquoted * after an ANTLR rule reference,
@@ -118,59 +120,27 @@ regexElement     : regexPrimary regexQuantifier? ;
 regexPrimary     : NONTERMINAL | LPAREN regexExpression RPAREN | charSet ;
 regexQuantifier  : STAR | PLUS | QUESTION ;
 
-charSet : LBRACKET charSetElement* RBRACKET | WILDCARD ;
-charSetElement
-    : OCTAL_ESCAPE
-    | ESCAPE
-    | ~(OCTAL_ESCAPE | ESCAPE | RBRACKET | NEWLINE)
+// Only the charset notation used by SyntaxBNF: leading ^ negation, ranges,
+// octal escapes (one to three digits), and quoted characters. A hyphen at
+// either edge is literal, as in <sign> ::: [+-]; an interior hyphen is a range.
+// Both range endpoints may be escaped. There are no nested set operations,
+// POSIX classes, Unicode properties, or other regex-engine extensions.
+charSet
+    : LBRACKET charSetNegation? leadingDash=DASH? charSetElement* trailingDash=DASH? RBRACKET
+    | WILDCARD
     ;
+charSetNegation : CARET ;
+charSetElement
+    : charSetRange
+    | charSetCharacter
+    ;
+charSetRange : charSetCharacter DASH charSetCharacter ;
+charSetCharacter : charSetEscape | charSetLiteral ;
+charSetLiteral : CHARSET_CHARACTER | OCTAL_DIGIT | CARET ;
+charSetEscape : BACKSLASH (octalDigits | ESCAPED_CHARACTER) ;
+octalDigits : OCTAL_DIGIT OCTAL_DIGIT? OCTAL_DIGIT? ;
 
-// PERCENT is allowed inside a character set. Example:
-//   <percentage_sign> ::: [%]
-commentLine : PERCENT (~NEWLINE)* lineEnd ;
+// The lexer recognizes comments only outside definitions; [%] is set content.
+commentLine : COMMENT lineEnd ;
 blankLine   : NEWLINE ;
 lineEnd     : NEWLINE | EOF ;
-
-SYNTAX_DEFINITION      : '::=' ;
-SEMANTIC_DEFINITION    : ':==' ;
-TOKEN_DEFINITION       : '::-' ;
-LEXER_MACRO_DEFINITION : ':::' ;
-
-NONTERMINAL : '<' [A-Za-z_] [A-Za-z0-9_]* '>' ;
-
-// Consumed indirectly through the negated token sets in syntaxTerminal and
-// charSetElement. Grouping a word-like terminal into one token prevents
-// RAW_CHARACTER from emitting one token per character and lets the converter
-// distinguish words from punctuation operators.
-// For example, syntaxTerminal consumes the BARE_WORD "tpi" in:
-//   <tpi_annotated> ::= tpi(<name>,<formula_role>,<tpi_formula><annotations>).
-// charSetElement also consumes BARE_WORD tokens for unescaped content;
-// for example, [A-Za-z] contains the BARE_WORD tokens "A", "Za", and "z".
-BARE_WORD   : [A-Za-z0-9_$]+ ;
-
-PIPE        : '|' ;
-STAR        : '*' ;
-PLUS        : '+' ;
-QUESTION    : '?' ;
-PERCENT     : '%' ;
-WILDCARD    : '.' ; // only used in <printable_char> ::: .
-
-// Flex-style octal escapes contain one to three octal digits. OCTAL_ESCAPE
-// must precede ESCAPE so that each complete octal escape is emitted as one token.
-OCTAL_ESCAPE : '\\' [0-7] [0-7]? [0-7]? ;
-// Other escapes quote one non-newline character and are preserved verbatim.
-ESCAPE       : '\\' ~[\r\n] ;
-
-LPAREN      : '(' ;
-RPAREN      : ')' ;
-LBRACKET    : '[' ;
-RBRACKET    : ']' ;
-LBRACE      : '{' ;
-RBRACE      : '}' ;
-
-// This token must precede NEWLINE. It turns an indented physical line into
-// part of the current logical definition.
-CONTINUATION          : '\r'? '\n' [ \t]+ -> skip ;
-HORIZONTAL_WHITESPACE : [ \t]+ -> skip ;
-NEWLINE               : '\r'? '\n' ;
-RAW_CHARACTER         : . ;
