@@ -33,7 +33,6 @@ DEFAULT_ANTLR_JAR = REPOSITORY_ROOT / "ANTLRParsers" / "antlr-4.13.2-complete.ja
 
 NONTERMINAL_PATTERN = re.compile(r"^<([A-Za-z_][A-Za-z0-9_]*)>$")
 GRAMMAR_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
-OCTAL_ESCAPE_PATTERN = re.compile(r"\\([0-7]{2,3})")
 OPERATOR_CHARACTERS = frozenset("!#&*+-/:<=>?@^~|")
 
 
@@ -524,27 +523,20 @@ class GrammarConverter:
             ]
             return "( " + " | ".join(alternatives) + " )"
 
-        character_set = primary.characterSet()
-        if character_set is not None:
-            content = "".join(
-                element.getText()
-                for element in character_set.characterSetElement()
-            )
-            return "[" + convert_octal_escapes(content) + "]"
-
-        literal = primary.regexLiteral().getText()
-        if literal == ".":
+        char_set = primary.charSet()
+        if char_set.WILDCARD() is not None:
             return "."
-        return antlr_literal(literal)
+        content = "".join(
+            self.convert_character_set_element(element)
+            for element in char_set.characterSetElement()
+        )
+        return "[" + content + "]"
 
-
-def convert_octal_escapes(character_set: str) -> str:
-    """Translate SyntaxBNF's POSIX octal escapes into ANTLR Unicode escapes."""
-
-    return OCTAL_ESCAPE_PATTERN.sub(
-        lambda match: f"\\u{int(match.group(1), 8):04X}",
-        character_set,
-    )
+    def convert_character_set_element(self, element: Any) -> str:
+        octal_escape = element.OCTAL_ESCAPE()
+        if octal_escape is not None:
+            return f"\\u{int(octal_escape.getText()[1:], 8):04X}"
+        return element.getText()
 
 
 def format_rule(

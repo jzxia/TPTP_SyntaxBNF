@@ -2,6 +2,11 @@ grammar BNFMeta;
 
 // Meta-grammar for the TPTP SyntaxBNF notation.
 //
+// - A definition starts in column 1.
+// - An indented physical line (i.e., one whose first character is horizontal whitespace)
+//   continues the preceding definition.
+// - CONTINUATION implements that convention without target-language actions.
+//
 // IMPORTANT: SyntaxBNF uses two different right-hand-side sublanguages.
 // The main differences between the two sublanguages are:
 //
@@ -47,15 +52,8 @@ grammar BNFMeta;
 //
 // These contextual differences are why the parser below has separate
 // syntaxExpression and regexExpression rule families.
-//
-// - A definition starts in column 1.
-// - An indented physical line (i.e., one whose first character is horizontal whitespace)
-//   continues the preceding definition.
-// - CONTINUATION implements that convention without target-language actions.
 
-document
-    : documentItem* EOF
-    ;
+document : documentItem* EOF ;
 
 documentItem
     : commentLine
@@ -67,35 +65,24 @@ documentItem
     ;
 
 // ::= defines the context-free grammar used by a parser.
-syntacticRule
-    : ruleName SYNTAX_DEFINITION syntaxExpression lineEnd
-    ;
+syntacticRule  : ruleName SYNTAX_DEFINITION syntaxExpression lineEnd ;
 
 // :== records a semantic restriction on a syntactically broader rule.
-semanticRule
-    : ruleName SEMANTIC_DEFINITION syntaxExpression lineEnd
-    ;
+semanticRule   : ruleName SEMANTIC_DEFINITION syntaxExpression lineEnd ;
 
 // ::- defines a token emitted by the lexical scanner.
-tokenRule
-    : ruleName TOKEN_DEFINITION regexExpression lineEnd
-    ;
+tokenRule      : ruleName TOKEN_DEFINITION regexExpression lineEnd ;
 
-// ::: defines a regular-expression macro used inside token rules.
-lexerMacroRule
-    : ruleName LEXER_MACRO_DEFINITION regexExpression lineEnd
-    ;
+// ::: defines a macro used inside token rules.
+lexerMacroRule : ruleName LEXER_MACRO_DEFINITION regexExpression lineEnd ;
 
-ruleName
-    : NONTERMINAL
-    ;
+ruleName : NONTERMINAL ;
 
 // The * character has four context-dependent meanings in SyntaxBNF:
 //
 // 1. EBNF repetition after a nonterminal in a ::= or :== expression:
 //      <TPTP_file> ::= <TPTP_input>*
-//      <thf_formula_list> ::=
-//                    <thf_logic_formula><comma_thf_logic_formula>*
+//      <thf_formula_list> ::= <thf_logic_formula><comma_thf_logic_formula>*
 //    The NONTERMINAL STAR alternative in syntaxElement handles this case.
 //
 // 2. Literal terminal punctuation in a ::= or :== expression:
@@ -104,93 +91,41 @@ ruleName
 //    it does not immediately follow a nonterminal. syntaxTerminal accepts it.
 //
 // 3. A postfix regular-expression quantifier in a ::- or ::: expression:
-//      <single_quoted> ::-
-//                    <single_quote><sq_char><sq_char>*<single_quote>
+//      <single_quoted> ::- <single_quote><sq_char><sq_char>*<single_quote>
 //    regexQuantifier handles this case.
 //
 // 4. A literal character inside a regular-expression character set:
 //      <star> ::: [*]
 //      <not_star_slash> ::: ([^*]*[*][*]*[^/*])*[^*]*
-//    characterSetElement accepts STAR as set content, so stars inside [...]
+//    charSetElement accepts STAR as set content, so stars inside [...]
 //    are not parsed as postfix quantifiers.
 //
 // At the metagrammar level, an unquoted * after an ANTLR rule reference,
 // such as documentItem*, is ANTLR's own "zero or more" operator.
 //
 // In ::= and :== rules, | is alternation.
-syntaxExpression
-    : syntaxAlternative (PIPE syntaxAlternative)*
-    ;
-
-syntaxAlternative
-    : syntaxElement*
-    ;
-
-syntaxElement
-    : NONTERMINAL STAR
-    | NONTERMINAL
-    | syntaxTerminal
-    ;
-
-syntaxTerminal
-    : ~(NONTERMINAL | PIPE | NEWLINE)
-    ;
+syntaxExpression  : syntaxAlternative (PIPE syntaxAlternative)* ;
+syntaxAlternative : syntaxElement* ;
+syntaxElement     : NONTERMINAL STAR | NONTERMINAL | syntaxTerminal ;
+syntaxTerminal    : ~(NONTERMINAL | PIPE | NEWLINE) ;
 
 // ::- and ::: use the regular-expression notation documented by SyntaxBNF.
-// Parentheses group, square brackets form character classes, and postfix
-// *, +, and ? are quantifiers.
-regexExpression
-    : regexAlternative (PIPE regexAlternative)*
+// Parentheses group, charSet accepts bracketed character classes or the
+// . wildcard, and postfix *, +, and ? are quantifiers.
+regexExpression  : regexAlternative (PIPE regexAlternative)* ;
+regexAlternative : regexElement* ;
+regexElement     : regexPrimary regexQuantifier? ;
+regexPrimary     : NONTERMINAL | LPAREN regexExpression RPAREN | charSet ;
+regexQuantifier  : STAR | PLUS | QUESTION ;
+
+charSet : LBRACKET charSetElement* RBRACKET | WILDCARD ;
+charSetElement
+    : OCTAL_ESCAPE
+    | ESCAPE
+    | ~(OCTAL_ESCAPE | ESCAPE | RBRACKET | NEWLINE)
     ;
 
-regexAlternative
-    : regexElement*
-    ;
-
-regexElement
-    : regexPrimary regexQuantifier?
-    ;
-
-regexPrimary
-    : NONTERMINAL
-    | LPAREN regexExpression RPAREN
-    | characterSet
-    | regexLiteral
-    ;
-
-regexQuantifier
-    : STAR
-    | PLUS
-    | QUESTION
-    ;
-
-characterSet
-    : LBRACKET characterSetElement* RBRACKET
-    ;
-
-characterSetElement
-    : ~(RBRACKET | NEWLINE)
-    ;
-
-regexLiteral
-    : ~(
-        NONTERMINAL
-        | PIPE
-        | STAR
-        | PLUS
-        | QUESTION
-        | LPAREN
-        | RPAREN
-        | LBRACKET
-        | RBRACKET
-        | LBRACE
-        | RBRACE
-        | NEWLINE
-      )
-    ;
-
-// PERCENT is allowed inside a character set.
-// Example from SyntaxBNF-v9.3.1.2, line 713:
+// PERCENT is allowed inside a character set. Example:
 //   <percentage_sign> ::: [%]
 commentLine : PERCENT (~NEWLINE)* lineEnd ;
 blankLine   : NEWLINE ;
@@ -202,6 +137,15 @@ TOKEN_DEFINITION       : '::-' ;
 LEXER_MACRO_DEFINITION : ':::' ;
 
 NONTERMINAL : '<' [A-Za-z_] [A-Za-z0-9_]* '>' ;
+
+// Consumed indirectly through the negated token sets in syntaxTerminal and
+// charSetElement. Grouping a word-like terminal into one token prevents
+// RAW_CHARACTER from emitting one token per character and lets the converter
+// distinguish words from punctuation operators.
+// For example, syntaxTerminal consumes the BARE_WORD "tpi" in:
+//   <tpi_annotated> ::= tpi(<name>,<formula_role>,<tpi_formula><annotations>).
+// charSetElement also consumes BARE_WORD tokens for unescaped content;
+// for example, [A-Za-z] contains the BARE_WORD tokens "A", "Za", and "z".
 BARE_WORD   : [A-Za-z0-9_$]+ ;
 
 PIPE        : '|' ;
@@ -209,6 +153,13 @@ STAR        : '*' ;
 PLUS        : '+' ;
 QUESTION    : '?' ;
 PERCENT     : '%' ;
+WILDCARD    : '.' ; // only used in <printable_char> ::: .
+
+// Flex-style octal escapes contain one to three octal digits. OCTAL_ESCAPE
+// must precede ESCAPE so that each complete octal escape is emitted as one token.
+OCTAL_ESCAPE : '\\' [0-7] [0-7]? [0-7]? ;
+// Other escapes quote one non-newline character and are preserved verbatim.
+ESCAPE       : '\\' ~[\r\n] ;
 
 LPAREN      : '(' ;
 RPAREN      : ')' ;
