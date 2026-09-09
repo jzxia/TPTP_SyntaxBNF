@@ -30,8 +30,9 @@ options { tokenVocab=BNFMetaLexer; }
 //
 // 2. Postfix *, +, and ?
 //
-//    In ::= and :== rules, * is repetition only immediately after a
-//    nonterminal. Otherwise *, +, and ? are literal terminal punctuation:
+//    In ::= and :== rules, * means repetition only if it is the
+//    next token after a nonterminal (regardless of intervening spaces).
+//    Otherwise *, +, and ? are literal terminal punctuation:
 //
 //      <TPTP_file> ::= <TPTP_input>*
 //      <th0_quantifier> ::= ^ | @+ | @-
@@ -108,7 +109,7 @@ ruleName : NONTERMINAL ;
 // In ::= and :== rules, | is alternation.
 syntaxExpression  : syntaxAlternative (PIPE syntaxAlternative)* ;
 syntaxAlternative : syntaxElement* ;
-syntaxElement     : NONTERMINAL STAR | NONTERMINAL | syntaxTerminal ;
+syntaxElement     : NONTERMINAL STAR? | syntaxTerminal ;
 syntaxTerminal    : BARE_WORD | STAR | RAW_CHARACTER ;
 
 // ::- and ::: use the regular-expression notation documented by SyntaxBNF.
