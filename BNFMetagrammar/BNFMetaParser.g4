@@ -103,10 +103,10 @@ ruleName : NONTERMINAL ;
 //    charSetElement accepts literal stars as set content, so stars inside [...]
 //    are not parsed as postfix quantifiers.
 //
-// At the metagrammar level, an unquoted * after an ANTLR rule reference,
-// such as documentItem*, is ANTLR's own "zero or more" operator.
-//
 // In ::= and :== rules, | is alternation.
+//
+// Empty alternatives are allowed and represent the empty sequence. For example:
+//      <nothing>              ::=
 syntaxExpression  : syntaxAlternative (PIPE syntaxAlternative)* ;
 syntaxAlternative : syntaxElement* ;
 syntaxElement     : NONTERMINAL STAR? | syntaxTerminal ;
