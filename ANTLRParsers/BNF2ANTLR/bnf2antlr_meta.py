@@ -639,18 +639,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"error: {error}", file=sys.stderr)
         return 1
 
-    parser_count = sum(
-        definition.operator == "::=" for definition in definitions
-    )
-    semantic_count = sum(
-        definition.operator == ":==" for definition in definitions
-    )
-    token_count = sum(
-        definition.operator == "::-" for definition in definitions
-    )
-    macro_count = sum(
-        definition.operator == ":::" for definition in definitions
-    )
+    parser_count   = sum(d.operator == "::=" for d in definitions)
+    semantic_count = sum(d.operator == ":==" for d in definitions)
+    token_count    = sum(d.operator == "::-" for d in definitions)
+    macro_count    = sum(d.operator == ":::" for d in definitions)
     print(
         f"Wrote {output_path} "
         f"({parser_count} parser rules, {token_count} tokens, "

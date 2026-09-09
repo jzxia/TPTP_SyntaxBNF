@@ -36,6 +36,8 @@ class CharsetTests(unittest.TestCase):
         spec = importlib.util.spec_from_file_location(
             f"{name}Lexer", directory / f"{name}Lexer.py"
         )
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Cannot load generated lexer {name}Lexer")
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return getattr(module, f"{name}Lexer")
