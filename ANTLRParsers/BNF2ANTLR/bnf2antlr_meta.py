@@ -532,17 +532,14 @@ class GrammarConverter:
         char_set = primary.charSet()
         if char_set.WILDCARD() is not None:
             return "."
-        content = r"\-" if char_set.leadingDash is not None else ""
+        set_content = char_set.charSetContent()
+        content = r"\-" if set_content.leadingDash is not None else ""
         content += "".join(
             self.convert_character_set_element(element)
-            for element in char_set.charSetElement()
+            for element in set_content.charSetElement()
         )
-        content += r"\-" if char_set.trailingDash is not None else ""
-        if not content:
-            raise ConversionError(
-                f"line {char_set.start.line}: empty character set"
-            )
-        negation = "~" if char_set.charSetNegation() is not None else ""
+        content += r"\-" if set_content.trailingDash is not None else ""
+        negation = "~" if char_set.NEGATED_LBRACKET() is not None else ""
         return negation + "[" + content + "]"
 
     def convert_character_set_element(self, element: Any) -> str:

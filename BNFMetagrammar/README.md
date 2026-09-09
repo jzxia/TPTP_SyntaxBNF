@@ -38,9 +38,15 @@ Charset support is deliberately limited to SyntaxBNF notation:
 - Ranges with literal or escaped endpoints: `A-Z`, `\40-\46`, `\123-X`.
 - Literal hyphens at the edges, including `[+-]`, and the existing `.` wildcard.
 
-The parse tree exposes `charSetNegation`, `charSetRange`, `charSetEscape`,
-and `octalDigits`. The converter decodes octal values, emits ANTLR negation
-as `~[...]`, and rejects empty sets and descending ranges. Hex escapes,
+The lexer recognizes `[^` as a `NEGATED_LBRACKET` token, so leading negation
+cannot be interpreted as a literal caret. The parser requires nonempty
+`charSetContent`, rejecting `[]` and `[^]` while allowing `[-]` and `[^-]`.
+Edge hyphens are recorded as `leadingDash` and `trailingDash` on that content;
+a lone hyphen is always `leadingDash`.
+
+The parse tree also exposes `charSetRange`, `charSetEscape`, and `octalDigits`.
+The converter decodes octal values, emits ANTLR negation as `~[...]`, and
+rejects descending ranges. Hex escapes,
 Unicode properties, POSIX classes, and set operations are not implemented.
 
 Generate and run a parser from this directory with:

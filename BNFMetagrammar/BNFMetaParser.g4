@@ -127,14 +127,20 @@ regexQuantifier  : STAR | PLUS | QUESTION ;
 // Both range endpoints may be escaped. There are no nested set operations,
 // POSIX classes, Unicode properties, or other regex-engine extensions.
 charSet
-    : LBRACKET charSetNegation? leadingDash=DASH? charSetElement* trailingDash=DASH? RBRACKET
+    : (LBRACKET | NEGATED_LBRACKET) charSetContent RBRACKET
     | WILDCARD
     ;
-charSetNegation  : CARET ;
+// Every set contains at least one character. A leading dash supplies that
+// character in [-]; otherwise at least one charSetElement is required.
+// The two alternatives also ensure a lone dash is always the leading dash.
+charSetContent
+    : leadingDash=DASH charSetElement* trailingDash=DASH?
+    | charSetElement+ trailingDash=DASH?
+    ;
 charSetElement   : charSetRange | charSetCharacter ;
 charSetRange     : charSetCharacter DASH charSetCharacter ;
 charSetCharacter : charSetEscape | charSetLiteral ;
-charSetLiteral   : CHARSET_CHARACTER | OCTAL_DIGIT | CARET ;
+charSetLiteral   : CHARSET_CHARACTER | OCTAL_DIGIT ;
 charSetEscape    : BACKSLASH (octalDigits | ESCAPED_CHARACTER) ;
 octalDigits      : OCTAL_DIGIT OCTAL_DIGIT? OCTAL_DIGIT? ;
 

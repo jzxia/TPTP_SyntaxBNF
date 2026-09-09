@@ -39,6 +39,8 @@ QUESTION         : '?' ;
 WILDCARD         : '.' ;
 LPAREN           : '(' ;
 RPAREN           : ')' ;
+// Consume leading negation with the opener; all carets inside CHARSET are literal.
+NEGATED_LBRACKET : '[^' -> pushMode(CHARSET) ;
 LBRACKET         : '[' -> pushMode(CHARSET) ;
 REGEX_CONTINUATION : CONTINUED_LINE -> skip ;
 REGEX_WHITESPACE   : [ \t]+ -> skip ;
@@ -48,7 +50,6 @@ REGEX_CHARACTER    : . -> type(RAW_CHARACTER) ;
 mode CHARSET;
 RBRACKET          : ']' -> popMode ;
 BACKSLASH         : '\\' -> pushMode(QUOTED_CHARACTER) ;
-CARET             : '^' ;
 DASH              : '-' ;
 OCTAL_DIGIT       : [0-7] ;
 CHARSET_NEWLINE   : LINE_BREAK -> type(NEWLINE) ;

@@ -7,6 +7,8 @@ import tempfile
 import unittest
 
 import antlr4
+from antlr4.atn.PredictionMode import PredictionMode
+from antlr4.error.ErrorListener import ErrorListener
 
 import bnf2antlr_meta as converter
 
@@ -56,6 +58,16 @@ class CharsetTests(unittest.TestCase):
             (r"[\1\12\1234]", {chr(1), chr(0o12), "S", "4"}),
             (r"[\]\-\^]", {"]", "-", "^"}),
             (r"[a^]", {"a", "^"}),
+            (r"[\^]", {"^"}),
+            (r"[^^]", set(map(chr, range(128))) - {"^"}),
+            (r"[^a]", set(map(chr, range(128))) - {"a"}),
+            (r"[ ^]", {" ", "^"}),
+            (r"[-]", {"-"}),
+            (r"[^-]", set(map(chr, range(128))) - {"-"}),
+            (r"[-a]", {"-", "a"}),
+            (r"[a-]", {"a", "-"}),
+            (r"[-a-]", {"-", "a"}),
+            (r"[--]", {"-"}),
         ]
         with tempfile.TemporaryDirectory(prefix="bnf-charsets-test-") as tmp:
             directory = Path(tmp)
@@ -92,6 +104,51 @@ class CharsetTests(unittest.TestCase):
             self.assertIn("'tpi' '(' '[' Sample ']' ',' '\\\\' 'n' ')'", grammar)
             self.assertIn(r"[\u0053-X]", grammar)
             self.assertIn("[%]", grammar)
+
+    def test_empty_charsets_rejected_by_parser(self):
+        with tempfile.TemporaryDirectory(prefix="bnf-empty-set-test-") as tmp:
+            input_path = Path(tmp) / "empty.bnf"
+            for charset in ("[]", "[^]"):
+                with self.subTest(charset=charset):
+                    input_path.write_text(f"<sample> ::: {charset}\n")
+                    # Check parsing itself, before converter validation can run.
+                    with self.assertRaises(converter.ConversionError):
+                        converter.parse_syntax_bnf(
+                            input_path, converter.DEFAULT_METAGRAMMAR,
+                            converter.DEFAULT_ANTLR_JAR,
+                        )
+
+    def test_charset_prefixes_are_unambiguous(self):
+        class Diagnostics(ErrorListener):
+            def __init__(self):
+                self.errors = []
+                self.ambiguities = []
+
+            def syntaxError(self, recognizer, symbol, line, column, message, error):
+                self.errors.append(message)
+
+            def reportAmbiguity(self, recognizer, dfa, start, stop, exact, alts, configs):
+                self.ambiguities.append((start, stop))
+
+        with tempfile.TemporaryDirectory(prefix="bnf-set-ambiguity-test-") as tmp:
+            directory = Path(tmp)
+            converter.generate_metaparser(
+                converter.DEFAULT_METAGRAMMAR, converter.DEFAULT_ANTLR_JAR, directory,
+            )
+            lexer_class, parser_class = converter.import_generated_metaparser(directory)
+            for charset in ("[^a]", "[^^]", "[a^]", "[-]", "[^-]", "[-a-]", "[--]"):
+                with self.subTest(charset=charset):
+                    diagnostics = Diagnostics()
+                    lexer = lexer_class(antlr4.InputStream(f"<sample> ::: {charset}\n"))
+                    lexer.removeErrorListeners()
+                    lexer.addErrorListener(diagnostics)
+                    parser = parser_class(antlr4.CommonTokenStream(lexer))
+                    parser.removeErrorListeners()
+                    parser.addErrorListener(diagnostics)
+                    parser._interp.predictionMode = PredictionMode.LL_EXACT_AMBIG_DETECTION
+                    parser.document()
+                    self.assertEqual(diagnostics.errors, [])
+                    self.assertEqual(diagnostics.ambiguities, [])
 
     def test_invalid_charsets(self):
         for charset in ("[]", "[^]", "[Z-A]", r"[X-\123]", r"[\x41]", "[abc"):
