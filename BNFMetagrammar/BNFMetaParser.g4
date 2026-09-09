@@ -109,7 +109,7 @@ ruleName : NONTERMINAL ;
 syntaxExpression  : syntaxAlternative (PIPE syntaxAlternative)* ;
 syntaxAlternative : syntaxElement* ;
 syntaxElement     : NONTERMINAL STAR | NONTERMINAL | syntaxTerminal ;
-syntaxTerminal    : ~(NONTERMINAL | PIPE | NEWLINE) ;
+syntaxTerminal    : BARE_WORD | STAR | RAW_CHARACTER ;
 
 // ::- and ::: use the regular-expression notation documented by SyntaxBNF.
 // Parentheses group, charSet accepts bracketed character classes or the
@@ -129,18 +129,15 @@ charSet
     : LBRACKET charSetNegation? leadingDash=DASH? charSetElement* trailingDash=DASH? RBRACKET
     | WILDCARD
     ;
-charSetNegation : CARET ;
-charSetElement
-    : charSetRange
-    | charSetCharacter
-    ;
-charSetRange : charSetCharacter DASH charSetCharacter ;
+charSetNegation  : CARET ;
+charSetElement   : charSetRange | charSetCharacter ;
+charSetRange     : charSetCharacter DASH charSetCharacter ;
 charSetCharacter : charSetEscape | charSetLiteral ;
-charSetLiteral : CHARSET_CHARACTER | OCTAL_DIGIT | CARET ;
-charSetEscape : BACKSLASH (octalDigits | ESCAPED_CHARACTER) ;
-octalDigits : OCTAL_DIGIT OCTAL_DIGIT? OCTAL_DIGIT? ;
+charSetLiteral   : CHARSET_CHARACTER | OCTAL_DIGIT | CARET ;
+charSetEscape    : BACKSLASH (octalDigits | ESCAPED_CHARACTER) ;
+octalDigits      : OCTAL_DIGIT OCTAL_DIGIT? OCTAL_DIGIT? ;
 
-// The lexer recognizes comments only outside definitions; [%] is set content.
+// The lexer recognizes comments only outside definitions; [%] is a charSet.
 commentLine : COMMENT lineEnd ;
 blankLine   : NEWLINE ;
 lineEnd     : NEWLINE | EOF ;
