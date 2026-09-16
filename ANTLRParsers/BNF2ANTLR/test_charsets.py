@@ -55,13 +55,17 @@ class CharsetTests(unittest.TestCase):
             (r"[\\]", {"\\"}),
             (r"[.\n]", {".", "\n"}),
             (r"[+-]", {"+", "-"}),
-            (r"[\1\12\1234]", {chr(1), chr(0o12), "S", "4"}),
-            (r"[\]\-\^]", {"]", "-", "^"}),
+            (r"[\1\11\12\1234]", {chr(1), "\t", chr(0o12), chr(0o1234)}),
+            (r"[\000\777\78]", {chr(0), chr(0o777), chr(7), "8"}),
+            (r"[\000000123]", {"S"}),
+            (r"[\200000-\200002\4177777]", {chr(0x10000), chr(0x10001), chr(0x10002), chr(0x10FFFF)}),
+            (r"[\q\8\x]", set("\\q8x")),
+            (r"[\135\55\136]", {"]", "-", "^"}),
             (r"[a^]", {"a", "^"}),
-            (r"[\^]", {"^"}),
+            (r"[\^]", {"\\", "^"}),
             (r"[^^]", set(map(chr, range(128))) - {"^"}),
             (r"[^a]", set(map(chr, range(128))) - {"a"}),
-            (r"[ ^]", {" ", "^"}),
+            (r"[ ^~]", {" ", "^", "~"}),
             (r"[-]", {"-"}),
             (r"[^-]", set(map(chr, range(128))) - {"-"}),
             (r"[-a]", {"-", "a"}),
@@ -79,7 +83,7 @@ class CharsetTests(unittest.TestCase):
                         directory, name,
                     )
                     lexer_class = self.lexer_class(grammar, directory, name)
-                    for code in range(128):
+                    for code in sorted(set(range(128)) | {ord(c) for c in expected}):
                         character = chr(code)
                         lexer = lexer_class(antlr4.InputStream(character))
                         lexer.removeErrorListeners()
@@ -118,7 +122,41 @@ class CharsetTests(unittest.TestCase):
                             converter.DEFAULT_ANTLR_JAR,
                         )
 
-    def test_charset_prefixes_are_unambiguous(self):
+    def test_charset_escapes_are_single_tokens(self):
+        with tempfile.TemporaryDirectory(prefix="bnf-escape-token-test-") as tmp:
+            directory = Path(tmp)
+            converter.generate_metaparser(
+                converter.DEFAULT_METAGRAMMAR, converter.DEFAULT_ANTLR_JAR, directory,
+            )
+            lexer_class, _ = converter.import_generated_metaparser(directory)
+            cases = [
+                (r"\1\12\1234\78", [
+                    ("OCTAL_ESCAPE", r"\1"), ("OCTAL_ESCAPE", r"\12"),
+                    ("OCTAL_ESCAPE", r"\1234"),
+                    ("OCTAL_ESCAPE", r"\7"), ("CHARSET_CHARACTER", "8"),
+                ]),
+                (r"\000000123", [("OCTAL_ESCAPE", r"\000000123")]),
+                (r"\\\n", [
+                    ("QUOTED_ESCAPE", escape)
+                    for escape in (r"\\", r"\n")
+                ]),
+                (r"\]", [("CHARSET_CHARACTER", "\\"), ("RBRACKET", "]")]),
+                (r"\-", [("CHARSET_CHARACTER", "\\"), ("DASH", "-")]),
+                (r"\^", [("CHARSET_CHARACTER", "\\"), ("CHARSET_CHARACTER", "^")]),
+                (r"\q\8\x", [("CHARSET_CHARACTER", char) for char in r"\q\8\x"]),
+                ("\\", [("CHARSET_CHARACTER", "\\")]),
+            ]
+            for content, expected in cases:
+                with self.subTest(content=content):
+                    # EOF immediately after the content also exercises dangling escapes.
+                    lexer = lexer_class(antlr4.InputStream("<sample> ::: [" + content))
+                    tokens = lexer.getAllTokens()[3:]
+                    self.assertEqual(
+                        [(lexer.symbolicNames[token.type], token.text) for token in tokens],
+                        expected,
+                    )
+
+    def test_charsets_are_unambiguous(self):
         class Diagnostics(ErrorListener):
             def __init__(self):
                 self.errors = []
@@ -136,7 +174,10 @@ class CharsetTests(unittest.TestCase):
                 converter.DEFAULT_METAGRAMMAR, converter.DEFAULT_ANTLR_JAR, directory,
             )
             lexer_class, parser_class = converter.import_generated_metaparser(directory)
-            for charset in ("[^a]", "[^^]", "[a^]", "[-]", "[^-]", "[-a-]", "[--]"):
+            for charset in (
+                "[^a]", "[^^]", "[a^]", "[-]", "[^-]", "[-a-]", "[--]",
+                r"[\1\12\1234]", r"[\40-\46]", r"[\123-X]", r"[\135\55\136\\\n]",
+            ):
                 with self.subTest(charset=charset):
                     diagnostics = Diagnostics()
                     lexer = lexer_class(antlr4.InputStream(f"<sample> ::: {charset}\n"))
@@ -151,7 +192,11 @@ class CharsetTests(unittest.TestCase):
                     self.assertEqual(diagnostics.ambiguities, [])
 
     def test_invalid_charsets(self):
-        for charset in ("[]", "[^]", "[Z-A]", r"[X-\123]", r"[\x41]", "[abc"):
+        for charset in (
+            "[]", "[^]", "[Z-A]", r"[X-\123]", r"[\4200000]",
+            "[abc", "[\\", "[\\\n]", "[\\\r\n]",
+            "[a\n]", "[a\r]", "[a\t]", "[a\x00]", "[a\x7f]", "[aé]",
+        ):
             with self.subTest(charset=charset):
                 with tempfile.TemporaryDirectory(prefix="bnf-invalid-test-") as tmp:
                     with self.assertRaises(converter.ConversionError):

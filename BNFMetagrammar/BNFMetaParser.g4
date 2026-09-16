@@ -122,7 +122,7 @@ regexPrimary     : NONTERMINAL | LPAREN regexExpression RPAREN | charSet ;
 regexQuantifier  : STAR | PLUS | QUESTION ;
 
 // Only the charset notation used by SyntaxBNF: leading ^ negation, ranges,
-// octal escapes (one to three digits), and quoted characters. A hyphen at
+// octal escapes (one or more digits), and quoted characters. A hyphen at
 // either edge is literal, as in <sign> ::: [+-]; an interior hyphen is a range.
 // Both range endpoints may be escaped. There are no nested set operations,
 // POSIX classes, Unicode properties, or other regex-engine extensions.
@@ -139,10 +139,8 @@ charSetContent
     ;
 charSetElement   : charSetRange | charSetCharacter ;
 charSetRange     : charSetCharacter DASH charSetCharacter ;
-charSetCharacter : charSetEscape | charSetLiteral ;
-charSetLiteral   : CHARSET_CHARACTER | OCTAL_DIGIT ;
-charSetEscape    : BACKSLASH (octalDigits | ESCAPED_CHARACTER) ;
-octalDigits      : OCTAL_DIGIT OCTAL_DIGIT? OCTAL_DIGIT? ;
+charSetCharacter : charSetEscape | CHARSET_CHARACTER ;
+charSetEscape    : OCTAL_ESCAPE | QUOTED_ESCAPE ;
 
 // The lexer recognizes comments only outside definitions; [%] is a charSet.
 commentLine : COMMENT lineEnd ;

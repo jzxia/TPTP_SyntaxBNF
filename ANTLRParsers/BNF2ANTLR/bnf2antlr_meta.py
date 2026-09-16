@@ -563,16 +563,23 @@ class GrammarConverter:
         escape = character.charSetEscape()
         if escape is None:
             return character.getText()
-        octal = escape.octalDigits()
+        octal = escape.OCTAL_ESCAPE()
         if octal is not None:
-            return chr(int(octal.getText(), 8))
-        quoted = escape.ESCAPED_CHARACTER().getText()
+            value = int(octal.getText()[1:], 8)
+            if value > 0x10FFFF:
+                raise ConversionError(
+                    f"line {character.start.line}: octal escape exceeds Unicode range"
+                )
+            return chr(value)
+        quoted = escape.QUOTED_ESCAPE().getText()[1:]
         return "\n" if quoted == "n" else quoted
 
     def render_character_set_character(self, character: Any) -> str:
         value = self.character_set_value(character)
         escape = character.charSetEscape()
-        if escape is not None and escape.octalDigits() is not None:
+        if escape is not None and escape.OCTAL_ESCAPE() is not None:
+            if ord(value) > 0xFFFF:
+                return f"\\u{{{ord(value):X}}}"
             return f"\\u{ord(value):04X}"
         return {
             "\\": r"\\", "\n": r"\n", "\t": r"\t", "\r": r"\r",

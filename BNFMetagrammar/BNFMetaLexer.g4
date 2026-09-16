@@ -49,16 +49,7 @@ REGEX_CHARACTER    : . -> type(RAW_CHARACTER) ;
 
 mode CHARSET;
 RBRACKET          : ']' -> popMode ;
-BACKSLASH         : '\\' -> pushMode(QUOTED_CHARACTER) ;
+OCTAL_ESCAPE      : '\\' [0-7]+ ;      // ASCII code in base 8
+QUOTED_ESCAPE     : '\\' [\\n] ;       // escaped backslash or newline
 DASH              : '-' ;
-OCTAL_DIGIT       : [0-7] ;
-CHARSET_NEWLINE   : LINE_BREAK -> type(NEWLINE) ;
-CHARSET_CHARACTER : . ;
-
-// Quote exactly one character so that \] cannot close the charset and \\
-// cannot start another escape. Octal digits remain separate parser tokens.
-mode QUOTED_CHARACTER;
-QUOTED_OCTAL_DIGIT : [0-7] -> type(OCTAL_DIGIT), popMode ;
-ESCAPED_CHARACTER  : [\\n\]\-^] -> popMode ;
-QUOTED_NEWLINE     : LINE_BREAK -> type(NEWLINE), popMode ;
-INVALID_ESCAPE    : . -> popMode ;
+CHARSET_CHARACTER : [\u0020-\u007E] ;  // printable ASCII, including space
