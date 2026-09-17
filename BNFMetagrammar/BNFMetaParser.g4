@@ -4,7 +4,7 @@ options { tokenVocab=BNFMetaLexer; }
 
 // SyntaxBNF definitions conventionally start in column 1; indented lines
 // continue the preceding definition. The lexer handles these continuations.
-document : (definition | COMMENT lineEnd | NEWLINE)* EOF ;
+document : ((definition | COMMENT) lineEnd | NEWLINE)* EOF ;
 
 // ::= defines syntax; :== restricts it semantically.
 // ::- defines a token; ::: defines a lexer macro.
@@ -12,7 +12,7 @@ definition
     : name=NONTERMINAL
       ( separator=(SYNTAX_DEFINITION | SEMANTIC_DEFINITION) syntaxExpression
       | separator=(TOKEN_DEFINITION | LEXER_MACRO_DEFINITION) regexExpression
-      ) lineEnd
+      )
     ;
 
 // In ::= and :==, punctuation is literal except for | (alternation) and
