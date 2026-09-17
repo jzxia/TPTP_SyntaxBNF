@@ -26,6 +26,12 @@ temporary Python parser from `BNFMetagrammar/BNFMetaParser.g4` and its companion
 `BNFMetaLexer.g4`, parses the complete
 SyntaxBNF document, and emits a combined ANTLR4 grammar.
 
+The converter follows the existing SyntaxBNF conventions directly: `TPTP_file`
+is the entry rule, `comment` tokens are skipped, and macros referenced by parser
+rules become tokens. It relies on the metagrammar to validate definitions and
+stops at the first syntax error. Charset conversion also checks range order
+and octal values.
+
 Install the matching runtime once:
 
 ```bash

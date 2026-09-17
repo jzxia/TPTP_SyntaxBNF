@@ -122,6 +122,36 @@ class CharsetTests(unittest.TestCase):
                             converter.DEFAULT_ANTLR_JAR,
                         )
 
+    def test_document_boundaries(self):
+        source = (
+            "% Header with an example: <ignored> ::: [x]\n\n"
+            "<entry> ::= <sample>* | ?* | [] |\n"
+            "    (<sample>)\n"
+            "<entry> :== []\n"
+            "<sample> ::- <letter>+\n"
+            "<letter> ::: [A-Z]\n"
+            "<nothing> ::="
+        )
+        with tempfile.TemporaryDirectory(prefix="bnf-boundaries-test-") as tmp:
+            for newline in ("\n", "\r\n"):
+                for suffix in ("", "\n", "\n% Final comment"):
+                    with self.subTest(newline=newline, suffix=suffix):
+                        definitions, grammar = self.convert(
+                            (source + suffix).replace("\n", newline),
+                            Path(tmp), "Boundaries",
+                        )
+                        self.assertEqual(
+                            [(item.name, item.operator) for item in definitions],
+                            [("entry", "::="), ("entry", ":=="),
+                             ("sample", "::-"), ("letter", ":::"),
+                             ("nothing", "::=")],
+                        )
+                        self.assertIn("Sample*", grammar)
+                        self.assertIn("'?*'", grammar)
+                        self.assertIn("'[' ']'", grammar)
+                        self.assertIn("'(' Sample ')'", grammar)
+                        self.assertEqual(definitions[-1].expression.getText(), "")
+
     def test_charset_escapes_are_single_tokens(self):
         with tempfile.TemporaryDirectory(prefix="bnf-escape-token-test-") as tmp:
             directory = Path(tmp)
@@ -211,6 +241,42 @@ class CharsetTests(unittest.TestCase):
             self.lexer_class(grammar, directory, "Corpus")
             self.assertIn("~[/*]", grammar)
             self.assertIn("'tpi' '(' name", grammar)
+
+    def test_generated_parser(self):
+        source = (
+            "<TPTP_file> ::= <item>*\n"
+            "<item> ::= tpi(<word>)<connective><word>. | <vline><word>.\n"
+            "<connective> ::= => | <=> | ?*\n"
+            "<item> :== restricted\n"
+            "<word> ::- <lower>+\n"
+            "<lower> ::: [a-z]\n"
+            "<vline> ::: [|]\n"
+            "<comment> ::- [%]<lower>* | [#]<lower>*\n"
+        )
+        with tempfile.TemporaryDirectory(prefix="bnf-parser-test-") as tmp:
+            directory = Path(tmp)
+            _, grammar = self.convert(source, directory, "Converted")
+            lexer_class = self.lexer_class(grammar, directory, "Converted")
+            spec = importlib.util.spec_from_file_location(
+                "ConvertedParser", directory / "ConvertedParser.py",
+            )
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+
+            def parse(text):
+                lexer = lexer_class(antlr4.InputStream(text))
+                parser = module.ConvertedParser(antlr4.CommonTokenStream(lexer))
+                for recognizer in (lexer, parser):
+                    recognizer.removeErrorListeners()
+                    recognizer.addErrorListener(converter.SyntaxErrors())
+                return parser.tptp_file()
+
+            # Exercises operator grouping, exported macros, fragments, comments,
+            # semantic restrictions, repetition, and the entry rule's EOF.
+            tree = parse("tpi(a)=>b. %hello\n|c. #world\ntpi(d)<=>e. tpi(f)?*g.")
+            self.assertEqual(len(tree.item()), 4)
+            with self.assertRaises(converter.ConversionError):
+                parse("|a. extra")
 
 
 if __name__ == "__main__":

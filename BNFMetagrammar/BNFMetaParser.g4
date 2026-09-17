@@ -2,147 +2,51 @@ parser grammar BNFMetaParser;
 
 options { tokenVocab=BNFMetaLexer; }
 
-// Meta-grammar for the TPTP SyntaxBNF notation.
-//
-// - A definition starts in column 1.
-// - An indented physical line (i.e., one whose first character is horizontal whitespace)
-//   continues the preceding definition.
-// - CONTINUATION implements that convention without target-language actions.
-//
-// IMPORTANT: SyntaxBNF uses two different right-hand-side sublanguages.
-// The main differences between the two sublanguages are:
-//
-// 1. Parentheses, square brackets, and curly braces
-//
-//    In syntactic (::=) and semantic (:==) rules, they are normally literal
-//    punctuation in the TPTP language being defined. Examples from SyntaxBNF-v9.3.1.2:
-//
-//      <tpi_annotated> ::= tpi(<name>,<formula_role>,<tpi_formula><annotations>).
-//      <thf_tuple> ::= [] | [<thf_formula_list>]
-//      <ntf_connective_name> :== $box | $dia | {$necessary} | {$possible} | ...
-//
-//    In token (::-) and lexer-macro (:::) rules, parentheses group
-//    regular expressions and square brackets delimit character sets. Curly
-//    braces have no special role; named references use <name>:
-//
-//      <real> ::- (<signed_real>|<unsigned_real>)
-//      <vline> ::: [|]
-//
-// 2. Postfix *, +, and ?
-//
-//    In ::= and :== rules, * means repetition only if it is the
-//    next token after a nonterminal (regardless of intervening spaces).
-//    Otherwise *, +, and ? are literal terminal punctuation:
-//
-//      <TPTP_file> ::= <TPTP_input>*
-//      <th0_quantifier> ::= ^ | @+ | @-
-//      <type_quantifier> ::= !> | ?*
-//
-//    In ::- and ::: rules, *, +, and ? are regular-expression quantifiers
-//    when they follow a regex primary. Inside a character set they are literal:
-//
-//      <single_quoted> ::- <single_quote><sq_char><sq_char>*<single_quote>
-//      <star> ::: [*]
-//
-// 3. Vertical bars
-//
-//    Outside a character set, | separates alternatives in both sublanguages.
-//    A syntactic rule uses <vline> for a literal vertical bar, while a regex
-//    puts the literal character in a character set:
-//
-//      <assoc_connective> ::= <vline> | &
-//      <vline> ::: [|]
-//
-// These contextual differences are why the parser below has separate
-// syntaxExpression and regexExpression rule families.
+// SyntaxBNF definitions conventionally start in column 1; indented lines
+// continue the preceding definition. The lexer handles these continuations.
+document : (definition | COMMENT lineEnd | NEWLINE)* EOF ;
 
-document : documentItem* EOF ;
-
-documentItem
-    : commentLine
-    | syntacticRule
-    | semanticRule
-    | tokenRule
-    | lexerMacroRule
-    | blankLine
+// ::= defines syntax; :== restricts it semantically.
+// ::- defines a token; ::: defines a lexer macro.
+definition
+    : name=NONTERMINAL
+      ( separator=(SYNTAX_DEFINITION | SEMANTIC_DEFINITION) syntaxExpression
+      | separator=(TOKEN_DEFINITION | LEXER_MACRO_DEFINITION) regexExpression
+      ) lineEnd
     ;
 
-// ::= defines the context-free grammar used by a parser.
-syntacticRule  : ruleName SYNTAX_DEFINITION syntaxExpression lineEnd ;
-
-// :== records a semantic restriction on a syntactically broader rule.
-semanticRule   : ruleName SEMANTIC_DEFINITION syntaxExpression lineEnd ;
-
-// ::- defines a token emitted by the lexical scanner.
-tokenRule      : ruleName TOKEN_DEFINITION regexExpression lineEnd ;
-
-// ::: defines a macro used inside token rules.
-lexerMacroRule : ruleName LEXER_MACRO_DEFINITION regexExpression lineEnd ;
-
-ruleName : NONTERMINAL ;
-
-// The * character has four context-dependent meanings in SyntaxBNF:
-//
-// 1. EBNF repetition after a nonterminal in a ::= or :== expression:
-//      <TPTP_file> ::= <TPTP_input>*
-//      <thf_formula_list> ::= <thf_logic_formula><comma_thf_logic_formula>*
-//    The NONTERMINAL STAR alternative in syntaxElement handles this case.
-//
-// 2. Literal terminal punctuation in a ::= or :== expression:
-//      <type_quantifier> ::= !> | ?*
-//    Here * is part of the literal TPTP operator ?*, not repetition, because
-//    it does not immediately follow a nonterminal. syntaxTerminal accepts it.
-//
-// 3. A postfix regular-expression quantifier in a ::- or ::: expression:
-//      <single_quoted> ::- <single_quote><sq_char><sq_char>*<single_quote>
-//    regexQuantifier handles this case.
-//
-// 4. A literal character inside a regular-expression character set:
-//      <star> ::: [*]
-//      <not_star_slash> ::: ([^*]*[*][*]*[^/*])*[^*]*
-//    charSetElement accepts literal stars as set content, so stars inside [...]
-//    are not parsed as postfix quantifiers.
-//
-// In ::= and :== rules, | is alternation.
-//
-// Empty alternatives are allowed and represent the empty sequence. For example:
-//      <nothing>              ::=
+// In ::= and :==, punctuation is literal except for | (alternation) and
+// * after a nonterminal (repetition). Thus <input>* repeats, but ?* is literal.
+// Parentheses and brackets are literal, as in tpi(<name>) and [<term>].
+// Empty alternatives are allowed, including a definition with no RHS.
 syntaxExpression  : syntaxAlternative (PIPE syntaxAlternative)* ;
 syntaxAlternative : syntaxElement* ;
 syntaxElement     : NONTERMINAL STAR? | syntaxTerminal ;
 syntaxTerminal    : BARE_WORD | STAR | RAW_CHARACTER ;
 
-// ::- and ::: use the regular-expression notation documented by SyntaxBNF.
-// Parentheses group, charSet accepts bracketed character classes or the
-// . wildcard, and postfix *, +, and ? are quantifiers.
+// In ::- and :::, parentheses group, brackets delimit character sets,
+// and *, +, ? quantify the preceding primary. | separates alternatives.
+// Literal characters appear in sets: [|], [*], [(], etc.
 regexExpression  : regexAlternative (PIPE regexAlternative)* ;
 regexAlternative : regexElement* ;
 regexElement     : regexPrimary regexQuantifier? ;
 regexPrimary     : NONTERMINAL | LPAREN regexExpression RPAREN | charSet ;
 regexQuantifier  : STAR | PLUS | QUESTION ;
 
-// Only the charset notation used by SyntaxBNF: leading ^ negation, ranges,
-// octal escapes (one or more digits), and quoted characters. A hyphen at
-// either edge is literal, as in <sign> ::: [+-]; an interior hyphen is a range.
-// Both range endpoints may be escaped. There are no nested set operations,
-// POSIX classes, Unicode properties, or other regex-engine extensions.
+// [^ starts a negated set; later carets are literal. The wildcard . is
+// also treated as a character set. Escape values are decoded by the converter.
 charSet
     : (LBRACKET | NEGATED_LBRACKET) charSetContent RBRACKET
     | WILDCARD
     ;
-// Every set contains at least one character. A leading dash supplies that
-// character in [-]; otherwise at least one charSetElement is required.
-// The two alternatives also ensure a lone dash is always the leading dash.
+
+// Sets are nonempty. Edge hyphens are literal; an interior hyphen forms
+// a range. Separate alternatives keep a lone dash unambiguously leading.
 charSetContent
     : leadingDash=DASH charSetElement* trailingDash=DASH?
     | charSetElement+ trailingDash=DASH?
     ;
-charSetElement   : charSetRange | charSetCharacter ;
-charSetRange     : charSetCharacter DASH charSetCharacter ;
-charSetCharacter : charSetEscape | CHARSET_CHARACTER ;
-charSetEscape    : OCTAL_ESCAPE | QUOTED_ESCAPE ;
+charSetElement   : charSetCharacter (DASH charSetCharacter)? ;
+charSetCharacter : OCTAL_ESCAPE | QUOTED_ESCAPE | CHARSET_CHARACTER ;
 
-// The lexer recognizes comments only outside definitions; [%] is a charSet.
-commentLine : COMMENT lineEnd ;
-blankLine   : NEWLINE ;
-lineEnd     : NEWLINE | EOF ;
+lineEnd : NEWLINE | EOF ;

@@ -11,7 +11,8 @@ the TPTP SyntaxBNF notation:
 It also recognizes `%` comments, blank lines, and indented continuation lines.
 The parser and its companion `BNFMetaLexer.g4` are target-neutral and contain
 no embedded actions.
-These two files replace the previous combined `BNFMeta.g4` grammar.
+All four definition kinds share one `definition` parser rule, with `name` and
+`separator` token labels. Only the RHS distinguishes syntax from regex rules.
 
 The lexer keeps words such as `tpi` intact in syntactic and semantic rules.
 Inside regex charsets, it emits individual literal characters and complete
@@ -23,7 +24,12 @@ converter decodes each escape token. Lexer modes follow these contexts:
 | Default: rule names and comments | Start of document or end of definition | A definition operator |
 | Syntactic RHS | `::=` or `:==` | An uncontinued newline |
 | Regex RHS | `::-` or `:::` | An uncontinued newline |
-| Charset | `[` in a regex RHS | An unescaped `]` |
+| Charset | `[` in a regex RHS | `]` |
+
+Charset openers use `pushMode(CHARSET)`; the closing bracket uses `popMode`
+to return to REGEX. Other transitions use `mode(...)` directly.
+One `SPACING` fragment handles horizontal whitespace
+and indented continuation lines in all three contexts outside charsets.
 
 Indented continuation lines keep the RHS mode. Brackets in syntactic rules
 and example definitions in comments do not enter charset mode. Literal charset
@@ -45,9 +51,10 @@ cannot be interpreted as a literal caret. The parser requires nonempty
 Edge hyphens are recorded as `leadingDash` and `trailingDash` on that content;
 a lone hyphen is always `leadingDash`.
 
-The parse tree also exposes `charSetRange` and `charSetEscape`. Escapes are
-single `OCTAL_ESCAPE` or `QUOTED_ESCAPE` tokens. Longest-match lexing consumes
-the entire octal digit sequence: `\1234` is one escape, while `\78` is `\7`
+Each `charSetElement` contains one `charSetCharacter`, or two separated by
+`DASH` for a range. A character is a literal, `OCTAL_ESCAPE`, or `QUOTED_ESCAPE`
+token; no separate range or escape wrapper rules are needed. Longest-match
+lexing consumes the entire octal digit sequence: `\1234` is one escape, while `\78` is `\7`
 followed by literal `8`. Other backslashes fall back to literal characters;
 for example, `\q` contributes both a backslash and `q` to the set.
 The converter decodes octal values, emits ANTLR negation as `~[...]`, and
