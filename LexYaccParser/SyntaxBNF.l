@@ -53,7 +53,7 @@ int tptp_update_lval(char* lval) {
 
 single_quoted         {single_quote}{sq_char}{sq_char}*{single_quote}
 back_quoted           {back_quote}{upper_word}
-distinct_object       {double_quote}{do_char}*{double_quote}
+distinct_object       {double_quote}{do_char}{do_char}*{double_quote}
 dollar_word           {dollar}{alpha_numeric}*
 dollar_dollar_word    {dollar}{dollar}{alpha_numeric}*
 upper_word            {upper_alpha}{alpha_numeric}*
@@ -391,11 +391,6 @@ viewable_char         [.\n]
     tptp_prev_tok=_LIT_tpi;
     yylval.ival = tptp_update_lval(yytext);
     return(_LIT_tpi);
-}
-"unknown" {
-    tptp_prev_tok=_LIT_unknown;
-    yylval.ival = tptp_update_lval(yytext);
-    return(_LIT_unknown);
 }
 
 {single_quoted} {

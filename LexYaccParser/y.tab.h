@@ -109,24 +109,23 @@ extern int yydebug;
     _LIT_tff = 310,                /* _LIT_tff  */
     _LIT_thf = 311,                /* _LIT_thf  */
     _LIT_tpi = 312,                /* _LIT_tpi  */
-    _LIT_unknown = 313,            /* _LIT_unknown  */
-    arrow = 314,                   /* arrow  */
-    back_quoted = 315,             /* back_quoted  */
-    distinct_object = 316,         /* distinct_object  */
-    dollar_dollar_word = 317,      /* dollar_dollar_word  */
-    dollar_word = 318,             /* dollar_word  */
-    hash = 319,                    /* hash  */
-    integer = 320,                 /* integer  */
-    less_sign = 321,               /* less_sign  */
-    lower_word = 322,              /* lower_word  */
-    plus = 323,                    /* plus  */
-    rational = 324,                /* rational  */
-    real = 325,                    /* real  */
-    single_quoted = 326,           /* single_quoted  */
-    slash = 327,                   /* slash  */
-    slosh = 328,                   /* slosh  */
-    unrecognized = 329,            /* unrecognized  */
-    upper_word = 330               /* upper_word  */
+    arrow = 313,                   /* arrow  */
+    back_quoted = 314,             /* back_quoted  */
+    distinct_object = 315,         /* distinct_object  */
+    dollar_dollar_word = 316,      /* dollar_dollar_word  */
+    dollar_word = 317,             /* dollar_word  */
+    hash = 318,                    /* hash  */
+    integer = 319,                 /* integer  */
+    less_sign = 320,               /* less_sign  */
+    lower_word = 321,              /* lower_word  */
+    plus = 322,                    /* plus  */
+    rational = 323,                /* rational  */
+    real = 324,                    /* real  */
+    single_quoted = 325,           /* single_quoted  */
+    slash = 326,                   /* slash  */
+    slosh = 327,                   /* slosh  */
+    unrecognized = 328,            /* unrecognized  */
+    upper_word = 329               /* upper_word  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -190,24 +189,23 @@ extern int yydebug;
 #define _LIT_tff 310
 #define _LIT_thf 311
 #define _LIT_tpi 312
-#define _LIT_unknown 313
-#define arrow 314
-#define back_quoted 315
-#define distinct_object 316
-#define dollar_dollar_word 317
-#define dollar_word 318
-#define hash 319
-#define integer 320
-#define less_sign 321
-#define lower_word 322
-#define plus 323
-#define rational 324
-#define real 325
-#define single_quoted 326
-#define slash 327
-#define slosh 328
-#define unrecognized 329
-#define upper_word 330
+#define arrow 313
+#define back_quoted 314
+#define distinct_object 315
+#define dollar_dollar_word 316
+#define dollar_word 317
+#define hash 318
+#define integer 319
+#define less_sign 320
+#define lower_word 321
+#define plus 322
+#define rational 323
+#define real 324
+#define single_quoted 325
+#define slash 326
+#define slosh 327
+#define unrecognized 328
+#define upper_word 329
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -216,7 +214,7 @@ union YYSTYPE
 #line 152 "SyntaxBNF.y"
 int ival; double dval; char* sval; void* pval;
 
-#line 220 "y.tab.h"
+#line 218 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

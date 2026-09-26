@@ -52,7 +52,7 @@ pre_bundle: javascript_parser
 	sed -i -e "s/import antlr4 from 'antlr4';/import antlr4 from '.\/antlr4.js';/" $(TPTP_HOME)/ServiceTools/IDVDir/BuildBundles/js/TPTP*.js
 	@echo "---- Hacked path in static/js/TPTP*.js"
 
-ikv_bundle_and_runtime: python_parser
+ikv_bundle_and_runtime: python_parser $(TPTP_HOME)/ServiceTools/IIVDir/IKV/BuildBundle/js/parserIKV.js $(TPTP_HOME)/ServiceTools/IIVDir/IKV/BuildBundle/js/helpersIKV.js
 	@echo "---- Make IKVbundle.js"
 	cd $(TPTP_HOME)/ServiceTools/IIVDir/IKV/BuildBundle/js && $(TPTP_HOME)/ServiceTools/IDVDir/BuildBundles/esbuild helpersIKV.js --bundle --outfile=IKVbundle.js --format=iife --global-name=Bundle
 	@echo "---- Made IKVbundle.js"

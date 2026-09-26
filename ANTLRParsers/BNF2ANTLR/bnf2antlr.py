@@ -168,8 +168,10 @@ def convert_semantic_rule(line):
         if char == ">" and after_line[index - 1].isalpha():
             isInAlligator = False
             
-        if not isInAlligator and char != "|" and char != ">" and char != " ":
+        if not isInAlligator and char != "|" and char != ">" and char != " " and char != "*":
             result_str += "'" + char + "'"
+        elif char == "*":
+            result_str += "*"
             
         elif isInAlligator and char != "<":
             result_str += char
@@ -229,8 +231,10 @@ def convert_grammar_rule(line, append_EOF=False):
         if char == ">" and after_line[index - 1].isalpha():
             isInAlligator = False
             
-        if not isInAlligator and char != "|" and char != ">" and char != " ":
+        if not isInAlligator and char != "|" and char != ">" and char != " " and char != "*":
             result_str += "'" + char + "'"
+        elif char == "*":
+            result_str += "*"
             
         elif isInAlligator and char != "<":
             result_str += char
