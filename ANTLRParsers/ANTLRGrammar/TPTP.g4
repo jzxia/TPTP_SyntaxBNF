@@ -6,7 +6,7 @@ Comment_block : '/*' .*? '*/' -> skip;
 
 Single_quoted :  Single_quote   Sq_char   Sq_char * Single_quote ;
 Back_quoted :  Back_quote   Upper_word ;
-Distinct_object :  Double_quote   Do_char * Double_quote ;
+Distinct_object :  Double_quote   Do_char   Do_char * Double_quote ;
 Dollar_word :  Dollar   Alpha_numeric *;
 Dollar_dollar_word :  Dollar   Dollar   Alpha_numeric *;
 Upper_word :  Upper_alpha   Alpha_numeric *;
@@ -71,6 +71,25 @@ Viewable_char : '.\n';
 //%                                       <system_functor>(<thf_arguments>) | 
 //%                                       <functor>(<thf_arguments>) 
 //% v9.3.1.2 - Fixed typos in comments (thanks to Jiazhen) 
+//%          - Changed { and } to < and > in ... 
+//%            <comment_block>        ::: <Slash_char> <Star> <Not_star_slash> <Star> <Star>*<Slash_char> 
+//% v9.3.1.3 - Added logic to <formula_role> semantic rule. 
+//%          - Completed the <ntf_modal_system> list: 
+//%            $modal_system_K | $modal_system_KB | $modal_system_K4 | 
+//%            $modal_system_K5 | $modal_system_K45 | $modal_system_KB5 | 
+//%            $modal_system_D | $modal_system_DB | $modal_system_D4 | 
+//%            $modal_system_D5 | $modal_system_D45 | $modal_system_M | 
+//%            $modal_system_B | $modal_system_S4 | $modal_system_S5 | 
+//%            $modal_system_S5U 
+//%          - Completed the <ntf_modal_axiom> list: 
+//%            $modal_axiom_K | $modal_axiom_M | $modal_axiom_B | $modal_axiom_D | 
+//%            $modal_axiom_4 | $modal_axiom_5 | $modal_axiom_CD | $modal_axiom_BoxM | 
+//%            $modal_axiom_C4 | $modal_axiom_C 
+//%          - Added $abs to <defined_functor> semantic rule. 
+//%          - Fixed <Distinct_object> to require at least one <Do_char> ... 
+//%            <Double_quote> <Do_char> <Do_char>*<Double_quote> 
+//%          = Removed "unknown" from <source> because it conflicts with <dag_source> 
+//%          - Thanks to Johannes Schuster for finding the flaws! 
 //%-------------------------------------------------------------------------------------------------- 
 //%----README ... this header provides important meta- and usage information 
 //%---- 
@@ -118,7 +137,7 @@ annotations : ','source optional_info  |  nothing;
 //%----   <formula_role> ::= <user_role>-<source> 
 //%----... is now gone. Parsers may choose to be tolerant of it for backwards compatibility. 
 formula_role : Lower_word  |  Lower_word'-'general_term;
-//<formula_role>         :== axiom | hypothesis | definition | assumption | lemma | theorem | corollary | conjecture | negated_conjecture | plain | type | interpretation | unknown 
+//<formula_role>         :== axiom | hypothesis | definition | assumption | lemma | theorem | corollary | conjecture | negated_conjecture | plain | type | interpretation | logic | unknown 
 //%----"axiom"s are accepted, without proof. There is no guarantee that the axioms of a problem are 
 //%----consistent. "hypothesis"s are assumed to be true for a particular problem, and are used like 
 //%----"axiom"s. "definition"s are intended to define symbols. They are either universally quantified 
@@ -173,7 +192,6 @@ thf_defined_term : defined_term  |  th1_defined_term;
 //%----! [X:foo] a = X is formatted as ! [X:foo] (a = X) to save the lives of parsers that would 
 //%----parse it as (! [X:foo] a) = X and throw an error. 
 thf_defined_infix : thf_unitary_term defined_infix_pred thf_unitary_term;
-//% <thf_defined_infix>    ::= <thf_unitary_term> <defined_infix_pred> <thf_unitary_term> 
 //%----Defined terms can't be formulae. See TFF. FIX HERE. 
 thf_system_atomic : system_constant;
 //%----<thf_conditional> is written and read as a <thf_apply_formula> 
@@ -346,8 +364,8 @@ ntf_short_connective : '[.]'  |  Less_sign'.'Arrow  |  '{.}'  |  '(.)';
 //<ntf_time_value>       :== <ntf_time_type> | [<ntf_time_type_list>] 
 //<ntf_time_type>        :== $reflexivity | $irreflexivity | $transitivity | $asymmetry | $anti_symmetry | $linearity | $forward_linearity | $backward_linearity | $beginning | $end | $no_beginning | $no_end | $density | $forward_discreteness | $backward_discreteness | <tff_atomic_type> <identical> <ntf_time_value> 
 //<ntf_time_type_list>   :== <ntf_time_type> | <ntf_time_type>,<ntf_time_type_list> 
-//<ntf_modal_system>     :== $modal_system_K | $modal_system_M | $modal_system_B | $modal_system_D | $modal_system_S4 | $modal_system_S5 
-//<ntf_modal_axiom>      :== $modal_axiom_K | $modal_axiom_M | $modal_axiom_B | $modal_axiom_D | $modal_axiom_4 | $modal_axiom_5 
+//<ntf_modal_system>     :== $modal_system_K | $modal_system_KB | $modal_system_K4 | $modal_system_K5 | $modal_system_K45 | $modal_system_KB5 | $modal_system_D | $modal_system_DB | $modal_system_D4 | $modal_system_D5 | $modal_system_D45 | $modal_system_M |  $modal_system_B | $modal_system_S4 | $modal_system_S5 | $modal_system_S5U 
+//<ntf_modal_axiom>      :== $modal_axiom_K | $modal_axiom_M | $modal_axiom_B | $modal_axiom_D | $modal_axiom_4 | $modal_axiom_5 | $modal_axiom_CD | $modal_axiom_BoxM | $modal_axiom_C4 | $modal_axiom_C 
 //%-------------------------------------------------------------------------------------------------- 
 //%----TCF formulae. 
 tcf_formula : tcf_logic_formula  |  tff_atom_typing;
@@ -425,7 +443,7 @@ thf_unary_connective : unary_connective  |  ntf_short_connective;
 //%----TH0 quantifiers are also available in TH1 
 th0_quantifier : '^'  |  '@+'  |  '@-';
 //%----Connectives - THF and TFF 
-type_quantifier : '!>'  |  '?*';
+type_quantifier : '!>'  |  '?'*;
 subtype_sign : '<<';
 //%----Connectives - TFF 
 tff_unary_connective : unary_connective  |  ntf_short_connective;
@@ -477,7 +495,7 @@ constant : functor;
 functor : atomic_word;
 defined_constant : defined_functor;
 defined_functor : atomic_defined_word;
-//<defined_functor>      :== $uminus | $sum | $difference | $product | $quotient | $quotient_e | $quotient_t | $quotient_f | $remainder_e | $remainder_t | $remainder_f | $floor | $ceiling | $truncate | $round | $to_int | $to_rat | $to_real 
+//<defined_functor>      :== $uminus | $sum | $difference | $product | $quotient | $quotient_e | $quotient_t | $quotient_f | $remainder_e | $remainder_t | $remainder_f | $floor | $ceiling | $truncate | $round | $abs | $to_int | $to_rat | $to_real 
 system_constant : system_functor;
 system_functor : atomic_system_word;
 th1_defined_term : '!!'  |  '??'  |  '@@+'  |  '@@-'  |  '@=';
@@ -486,7 +504,8 @@ variable : Upper_word;
 //%-------------------------------------------------------------------------------------------------- 
 //%----Formula sources 
 //%----Expanded semantic rules for IDV. It was <source>               ::= <general_term> 
-source : dag_source  |  internal_source  |  external_source  |  'unknown'  |  '['sources']';
+source : dag_source  |  internal_source  |  external_source  |  '['sources']';
+//%----A possible <source>, but conflicts with <dag_source>, is unknown 
 //%----Alternative sources are recorded like this, thus allowing representation 
 //%----of alternative derivations with shared parts. 
 sources : source  |  source','sources;
@@ -536,8 +555,7 @@ useful_info : general_list;
 //%----        Used for negation of conjectures in FOF to CNF conversion. 
 //%----  esa - There exists a model of the parent formulae iff there exists a model of the inferred 
 //%----        formula. Used for Skolemization steps. 
-//%----For the full hierarchy see the SZSOntology file distributed with the TPTP. 
-//<status_value>         :== suc | unp | sap | esa | sat | fsa | thm | eqv | tac | wec | eth | tau | wtc | wth | cax | sca | tca | wca | cup | csp | ecs | csa | cth | ceq | unc | wcc | ect | fun | uns | wuc | wct | scc | uca | noc 
+//%----For the full hierarchy see https://szs.tptp.org 
 //%----<inference_info> is used to record standard information associated with an arbitrary inference 
 //%----rule. The <inference_rule> is the same as the <inference_rule> of the <inference_record>. The 
 //%----<atomic_word> indicates the information being recorded in the <general_list>. The 
@@ -607,7 +625,7 @@ nothing : ;
 //%----<Single_quoted>s contain visible characters. \ is the escape character for ' and \, i.e., 
 //%----\' is not the end of the <Single_quoted>. The token does not include the outer quotes, e.g., 
 //%----'cat' and cat are the same. See <atomic_word> for information about stripping the quotes. 
-//%---Space and visible characters upto ~, except " and \ Distinct_object>s contain visible 
+//%---Space and visible characters upto ~, except " and \ <Distinct_object>s contain visible 
 //%----characters. \ is the escape character for " and \, i.e., \" is not the end of the 
 //%----<Distinct_object>. <Distinct_object>s are different from (but may be equal to) other tokens, 
 //%----e.g., "cat" is different from 'cat' and cat. Distinct objects are always interpreted as 

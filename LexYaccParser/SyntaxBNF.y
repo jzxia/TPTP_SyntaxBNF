@@ -206,7 +206,6 @@ int yywrap(void) {
 %token <ival> _LIT_tff
 %token <ival> _LIT_thf
 %token <ival> _LIT_tpi
-%token <ival> _LIT_unknown
 %token <ival> arrow
 %token <ival> back_quoted
 %token <ival> distinct_object
@@ -982,7 +981,6 @@ variable : upper_word {$<pval>$ = P_BUILD("variable", P_TOKEN("upper_word ", $<i
 source : dag_source {$<pval>$ = P_BUILD("source", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     | internal_source {$<pval>$ = P_BUILD("source", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     | external_source {$<pval>$ = P_BUILD("source", $<pval>1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
-                    | _LIT_unknown {$<pval>$ = P_BUILD("source", P_TOKEN("_LIT_unknown ", $<ival>1),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     | LBRKT sources RBRKT {$<pval>$ = P_BUILD("source", P_TOKEN("LBRKT ", $<ival>1), $<pval>2, P_TOKEN("RBRKT ", $<ival>3),NULL,NULL,NULL,NULL,NULL,NULL,NULL);}
                     ;
 
