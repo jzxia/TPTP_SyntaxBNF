@@ -1,5 +1,8 @@
 lexer grammar BNFMetaLexer;
 
+// Shared token types emitted by rules in both SYNTAX and REGEX modes.
+tokens { PIPE, STAR }
+
 // Modes describe where characters occur; BNFMetaParser.g4 gives them meaning.
 // Only ::- and ::: enter REGEX, and only REGEX's [ enters CHARSET.
 // Thus brackets and backslashes in syntactic rules stay literal punctuation.
@@ -9,28 +12,28 @@ SYNTAX_DEFINITION      : '::=' -> mode(SYNTAX) ;
 SEMANTIC_DEFINITION    : ':==' -> mode(SYNTAX) ;
 TOKEN_DEFINITION       : '::-' -> mode(REGEX) ;
 LEXER_MACRO_DEFINITION : ':::' -> mode(REGEX) ;
-NONTERMINAL            : RULE_REFERENCE ;
+NONTERMINAL            : NONTERMINAL_PATTERN ;
 COMMENT                : '%' ~[\r\n]* ;
-WHITESPACE             : SPACING -> skip ;
-NEWLINE                : LINE_BREAK ;
+WHITESPACE             : WHITESPACE_PATTERN -> skip ;
+NEWLINE                : NEWLINE_PATTERN ;
 RAW_CHARACTER          : . ;
 
-fragment RULE_REFERENCE : '<' [A-Za-z_] [A-Za-z0-9_]* '>' ;
-fragment LINE_BREAK     : '\r'? '\n' ;
+fragment NONTERMINAL_PATTERN : '<' [A-Za-z_] [A-Za-z0-9_]* '>' ;
+fragment NEWLINE_PATTERN     : '\r'? '\n' ;
 // A newline followed by indentation is whitespace, not a definition boundary.
-fragment SPACING        : LINE_BREAK? [ \t]+ ;
+fragment WHITESPACE_PATTERN  : NEWLINE_PATTERN? [ \t]+ ;
 
 mode SYNTAX;
-SYNTAX_NONTERMINAL : RULE_REFERENCE -> type(NONTERMINAL) ;
+SYNTAX_NONTERMINAL : NONTERMINAL_PATTERN -> type(NONTERMINAL) ;
 BARE_WORD          : [A-Za-z0-9_$]+ ;
-PIPE               : '|' ;
-STAR               : '*' ;
-SYNTAX_WHITESPACE  : SPACING -> skip ;
-SYNTAX_NEWLINE     : LINE_BREAK -> type(NEWLINE), mode(DEFAULT_MODE) ;
+SYNTAX_PIPE        : '|' -> type(PIPE) ;
+SYNTAX_STAR        : '*' -> type(STAR) ;
+SYNTAX_WHITESPACE  : WHITESPACE_PATTERN -> skip ;
+SYNTAX_NEWLINE     : NEWLINE_PATTERN -> type(NEWLINE), mode(DEFAULT_MODE) ;
 SYNTAX_CHARACTER   : . -> type(RAW_CHARACTER) ;
 
 mode REGEX;
-REGEX_NONTERMINAL : RULE_REFERENCE -> type(NONTERMINAL) ;
+REGEX_NONTERMINAL : NONTERMINAL_PATTERN -> type(NONTERMINAL) ;
 REGEX_PIPE        : '|' -> type(PIPE) ;
 REGEX_STAR        : '*' -> type(STAR) ;
 PLUS              : '+' ;
@@ -41,8 +44,8 @@ RPAREN            : ')' ;
 // Consume leading negation with the opener; all carets inside CHARSET are literal.
 NEGATED_LBRACKET  : '[^' -> pushMode(CHARSET) ;
 LBRACKET          : '['  -> pushMode(CHARSET) ;
-REGEX_WHITESPACE  : SPACING -> skip ;
-REGEX_NEWLINE     : LINE_BREAK -> type(NEWLINE), mode(DEFAULT_MODE) ;
+REGEX_WHITESPACE  : WHITESPACE_PATTERN -> skip ;
+REGEX_NEWLINE     : NEWLINE_PATTERN -> type(NEWLINE), mode(DEFAULT_MODE) ;
 REGEX_CHARACTER   : . -> type(RAW_CHARACTER) ;
 
 mode CHARSET;
