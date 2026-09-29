@@ -16,7 +16,7 @@ NONTERMINAL            : NONTERMINAL_PATTERN ;
 COMMENT                : '%' ~[\r\n]* ;
 WHITESPACE             : WHITESPACE_PATTERN -> skip ;
 NEWLINE                : NEWLINE_PATTERN ;
-RAW_CHARACTER          : . ;
+RAW_CHAR               : . ;
 
 fragment NONTERMINAL_PATTERN : '<' [A-Za-z_] [A-Za-z0-9_]* '>' ;
 fragment NEWLINE_PATTERN     : '\r'? '\n' ;
@@ -30,7 +30,7 @@ SYNTAX_PIPE        : '|' -> type(PIPE) ;
 SYNTAX_STAR        : '*' -> type(STAR) ;
 SYNTAX_WHITESPACE  : WHITESPACE_PATTERN -> skip ;
 SYNTAX_NEWLINE     : NEWLINE_PATTERN -> type(NEWLINE), mode(DEFAULT_MODE) ;
-SYNTAX_CHARACTER   : . -> type(RAW_CHARACTER) ;
+SYNTAX_RAW_CHAR    : . -> type(RAW_CHAR) ;
 
 mode REGEX;
 REGEX_NONTERMINAL : NONTERMINAL_PATTERN -> type(NONTERMINAL) ;
@@ -46,11 +46,11 @@ NEGATED_LBRACKET  : '[^' -> pushMode(CHARSET) ;
 LBRACKET          : '['  -> pushMode(CHARSET) ;
 REGEX_WHITESPACE  : WHITESPACE_PATTERN -> skip ;
 REGEX_NEWLINE     : NEWLINE_PATTERN -> type(NEWLINE), mode(DEFAULT_MODE) ;
-REGEX_CHARACTER   : . -> type(RAW_CHARACTER) ;
+REGEX_RAW_CHAR    : . -> type(RAW_CHAR) ;
 
 mode CHARSET;
 RBRACKET          : ']' -> popMode ;
 OCTAL_ESCAPE      : '\\' [0-7]+ ;      // character code in base 8
 QUOTED_ESCAPE     : '\\' [\\n] ;       // escaped backslash or newline
 DASH              : '-' ;
-CHARSET_CHARACTER : [\u0020-\u007E] ;  // printable ASCII, including space
+CHARSET_CHAR      : [\u0020-\u007E] ;  // printable ASCII, including space

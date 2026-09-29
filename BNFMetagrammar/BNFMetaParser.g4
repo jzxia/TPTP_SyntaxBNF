@@ -22,7 +22,7 @@ definition
 syntaxExpression  : syntaxAlternative (PIPE syntaxAlternative)* ;
 syntaxAlternative : syntaxElement* ;
 syntaxElement     : NONTERMINAL STAR? | syntaxTerminal ;
-syntaxTerminal    : BARE_WORD | STAR | RAW_CHARACTER ;
+syntaxTerminal    : BARE_WORD | STAR | RAW_CHAR ;
 
 // In ::- and :::, parentheses delimit groups, brackets delimit character sets,
 // and *, +, ? quantify the preceding primary. | separates alternatives.
@@ -46,7 +46,7 @@ charSetContent
     : leadingDash=DASH charSetElement* trailingDash=DASH?
     | charSetElement+ trailingDash=DASH?
     ;
-charSetElement   : charSetCharacter (DASH charSetCharacter)? ;
-charSetCharacter : OCTAL_ESCAPE | QUOTED_ESCAPE | CHARSET_CHARACTER ;
+charSetElement : charSetChar (DASH charSetChar)? ;
+charSetChar    : OCTAL_ESCAPE | QUOTED_ESCAPE | CHARSET_CHAR ;
 
 lineEnd : NEWLINE | EOF ;

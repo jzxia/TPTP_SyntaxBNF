@@ -102,16 +102,16 @@ def format_rule(name: str, alternatives: list[str], command: str = "") -> str:
     return "\n".join(lines) + "\n"
 
 
-def charset_character(character) -> tuple[int, str]:
+def charset_char(char) -> tuple[int, str]:
     """Return the character's code point and its ANTLR spelling."""
-    text = character.getText()
-    if character.OCTAL_ESCAPE():
+    text = char.getText()
+    if char.OCTAL_ESCAPE():
         code = int(text[1:], 8)
         if code > 0x10FFFF:
-            raise ConversionError(f"line {character.start.line}: octal escape exceeds Unicode range")
+            raise ConversionError(f"line {char.start.line}: octal escape exceeds Unicode range")
         spelling = f"\\u{code:04X}" if code <= 0xFFFF else f"\\u{{{code:X}}}"
         return code, spelling
-    if character.QUOTED_ESCAPE():
+    if char.QUOTED_ESCAPE():
         text = "\n" if text == r"\n" else "\\"
     spelling = {"\\": r"\\", "\n": r"\n", "[": r"\u005B"}.get(text, text)
     return ord(text), spelling
@@ -123,7 +123,7 @@ def charset(char_set) -> str:
     content = char_set.charSetContent()
     parts = [r"\-"] if content.leadingDash else []
     for element in content.charSetElement():
-        characters = [charset_character(c) for c in element.charSetCharacter()]
+        characters = [charset_char(c) for c in element.charSetChar()]
         if len(characters) == 2 and characters[0][0] > characters[1][0]:
             raise ConversionError(
                 f"line {element.start.line}: descending character range {element.getText()!r}"
