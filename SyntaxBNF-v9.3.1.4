@@ -24,6 +24,8 @@
 %            <double_quote><do_char><do_char>*<double_quote>
 %          = Removed "unknown" from <source> because it conflicts with <dag_source>
 %          - Thanks to Johannes Schuster for finding the flaws!
+% v9.3.1.4 - Changed <*_binary_assoc> to <*_binary_list> and <*_binary_nonassoc> to
+%            <*_binary_pair>, to reflect the intended non-associativity.
 %--------------------------------------------------------------------------------------------------
 %----README ... this header provides important meta- and usage information
 %----
@@ -98,10 +100,10 @@
 <thf_formula>          ::= <thf_logic_formula> | <thf_atom_typing> | <thf_subtype>
 <thf_logic_formula>    ::= <thf_unitary_formula> | <thf_unary_formula> | <thf_binary_formula> |
                            <thf_defined_infix> | <thf_definition> | <thf_sequent>
-<thf_binary_formula>   ::= <thf_binary_nonassoc> | <thf_binary_assoc> | <thf_binary_type>
-%----There's no precedence among binary connectives
-<thf_binary_nonassoc>  ::= <thf_unit_formula> <nonassoc_connective> <thf_unit_formula>
-<thf_binary_assoc>     ::= <thf_or_formula> | <thf_and_formula> | <thf_apply_formula>
+<thf_binary_formula>   ::= <thf_binary_pair> | <thf_binary_list> | <thf_binary_type>
+<thf_binary_pair>      ::= <thf_unit_formula> <nonassoc_connective> <thf_unit_formula>
+%----There's no intended precedence among associative connectives
+<thf_binary_list>      ::= <thf_or_formula> | <thf_and_formula> | <thf_apply_formula>
 <thf_or_formula>       ::= <thf_unit_formula> <vline> <thf_unit_formula> |
                            <thf_or_formula> <vline> <thf_unit_formula>
 <thf_and_formula>      ::= <thf_unit_formula> & <thf_unit_formula> |
@@ -210,9 +212,10 @@
 %----<tff_defined_infix> up here to avoid confusion in a = b | p, for TXF.
 %----For plain TFF it can be in <tff_defined_atomic>
 
-<tff_binary_formula>   ::= <tff_binary_nonassoc> | <tff_binary_assoc>
-<tff_binary_nonassoc>  ::= <tff_unit_formula> <nonassoc_connective> <tff_unit_formula>
-<tff_binary_assoc>     ::= <tff_or_formula> | <tff_and_formula>
+<tff_binary_formula>   ::= <tff_binary_pair> | <tff_binary_list>
+<tff_binary_pair>      ::= <tff_unit_formula> <nonassoc_connective> <tff_unit_formula>
+%----There's no intended precedence among associative connectives
+<tff_binary_list>      ::= <tff_or_formula> | <tff_and_formula>
 <tff_or_formula>       ::= <tff_unit_formula> <vline> <tff_unit_formula> |
                            <tff_or_formula> <vline> <tff_unit_formula>
 <tff_and_formula>      ::= <tff_unit_formula> & <tff_unit_formula> |
@@ -378,12 +381,10 @@
 <fof_formula>          ::= <fof_logic_formula> | <fof_sequent>
 <fof_logic_formula>    ::= <fof_binary_formula> | <fof_unary_formula> | <fof_unitary_formula>
 %----Future answer variable ideas | <answer_formula>
-<fof_binary_formula>   ::= <fof_binary_nonassoc> | <fof_binary_assoc>
-%----Only some binary connectives are associative
-%----There's no precedence among binary connectives
-<fof_binary_nonassoc>  ::= <fof_unit_formula> <nonassoc_connective> <fof_unit_formula>
-%----Associative connectives & and | are in <binary_assoc>
-<fof_binary_assoc>     ::= <fof_or_formula> | <fof_and_formula>
+<fof_binary_formula>   ::= <fof_binary_pair> | <fof_binary_list>
+<fof_binary_pair>      ::= <fof_unit_formula> <nonassoc_connective> <fof_unit_formula>
+%----There's no intended precedence among associative connectives
+<fof_binary_list>      ::= <fof_or_formula> | <fof_and_formula>
 <fof_or_formula>       ::= <fof_unit_formula> <vline> <fof_unit_formula> |
                            <fof_or_formula> <vline> <fof_unit_formula>
 <fof_and_formula>      ::= <fof_unit_formula> & <fof_unit_formula> |
