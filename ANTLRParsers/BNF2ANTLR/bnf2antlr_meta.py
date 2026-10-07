@@ -30,8 +30,8 @@ class ConversionError(RuntimeError):
 
 
 class SyntaxErrors(ErrorListener):
-    def syntaxError(self, recognizer, symbol, line, column, message, error):
-        raise ConversionError(f"line {line}:{column}: {message}")
+    def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
+        raise ConversionError(f"line {line}:{column}: {msg}")
 
 
 @dataclass
@@ -57,6 +57,8 @@ def import_generated_metaparser(output_directory: Path):
     classes = []
     for name in ("BNFMetaLexer", "BNFMetaParser"):
         spec = importlib.util.spec_from_file_location(name, output_directory / f"{name}.py")
+        if spec is None or spec.loader is None:
+            raise ConversionError(f"Cannot load generated module {name}")
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         classes.append(getattr(module, name))
