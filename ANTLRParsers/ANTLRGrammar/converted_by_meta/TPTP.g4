@@ -1,6 +1,6 @@
 grammar TPTP;
 
-// Generated from SyntaxBNF-v9.3.0.3 using BNFMeta.g4.
+// Generated from SyntaxBNF-v9.3.1.4 using BNFMetaParser.g4.
 // ::= rules are parser rules; :== restrictions are comments;
 // ::- rules are tokens; ::: rules are lexer fragments unless
 // referenced directly by a parser rule.
@@ -77,16 +77,16 @@ thf_logic_formula
     ;
 
 thf_binary_formula
-    : thf_binary_nonassoc
-    | thf_binary_assoc
+    : thf_binary_pair
+    | thf_binary_list
     | thf_binary_type
     ;
 
-thf_binary_nonassoc
+thf_binary_pair
     : thf_unit_formula nonassoc_connective thf_unit_formula
     ;
 
-thf_binary_assoc
+thf_binary_list
     : thf_or_formula
     | thf_and_formula
     | thf_apply_formula
@@ -159,6 +159,7 @@ thf_atomic_formula
     : thf_plain_atomic
     | thf_defined_atomic
     | thf_system_atomic
+    | thf_fof_function
     ;
 
 thf_plain_atomic
@@ -232,6 +233,16 @@ thf_conn_term
 thf_tuple
     : '[' ']'
     | '[' thf_formula_list ']'
+    ;
+
+thf_fof_function
+    : defined_functor '(' thf_arguments ')'
+    | system_functor '(' thf_arguments ')'
+    | functor '(' thf_arguments ')'
+    ;
+
+thf_arguments
+    : thf_formula_list
     ;
 
 thf_formula_list
@@ -310,15 +321,15 @@ tff_logic_formula
     ;
 
 tff_binary_formula
-    : tff_binary_nonassoc
-    | tff_binary_assoc
+    : tff_binary_pair
+    | tff_binary_list
     ;
 
-tff_binary_nonassoc
+tff_binary_pair
     : tff_unit_formula nonassoc_connective tff_unit_formula
     ;
 
-tff_binary_assoc
+tff_binary_list
     : tff_or_formula
     | tff_and_formula
     ;
@@ -640,15 +651,15 @@ fof_logic_formula
     ;
 
 fof_binary_formula
-    : fof_binary_nonassoc
-    | fof_binary_assoc
+    : fof_binary_pair
+    | fof_binary_list
     ;
 
-fof_binary_nonassoc
+fof_binary_pair
     : fof_unit_formula nonassoc_connective fof_unit_formula
     ;
 
-fof_binary_assoc
+fof_binary_list
     : fof_or_formula
     | fof_and_formula
     ;
@@ -949,7 +960,6 @@ source
     : dag_source
     | internal_source
     | external_source
-    | 'unknown'
     | '[' sources ']'
     ;
 
@@ -1123,73 +1133,72 @@ nothing
 // Semantic restrictions from SyntaxBNF.
 // They constrain the language semantically and are intentionally
 // not added as alternative context-free productions.
-// line 61: <formula_role> :== axiom | hypothesis | definition | assumption | lemma | theorem | corollary | conjecture | negated_conjecture | plain | type | interpretation | unknown
-// line 157: <thf_unitary_type> :== <thf_atomic_type> | <th1_quantified_type>
-// line 158: <thf_atomic_type> :== <type_constant> | <defined_type> | <variable> | <thf_mapping_type> | (<thf_atomic_type>)
-// line 160: <th1_quantified_type> :== <type_quantifier> [<thf_variable_list>] : <thf_unitary_type>
-// line 217: <tff_plain_atomic> :== <proposition> | <predicate>(<tff_arguments>)
-// line 225: <tff_defined_plain> :== <defined_proposition> | <defined_predicate>(<tff_arguments>) | <nxf_atom> | <txf_conditional> | <txf_let>
-// line 233: <tff_system_atomic> :== <system_proposition> | <system_predicate>(<tff_arguments>)
-// line 235: <txf_conditional> :== $ite(<tff_logic_formula>,<tff_term>,<tff_term>)
-// line 293: <ntf_connective_name> :== $box | $dia | {$necessary} | {$possible} | {$obligatory} | {$permissible} | {$knows} | {$canKnow} | {$believes} | {$canBelieve}
-// line 303: <ntf_semantics_spec> :== <ntf_logic_name> <identical> [<ntf_logic_spec_list>]
-// line 304: <ntf_logic_name> :== $modal | $alethic_modal | $deontic_modal | $epistemic_modal | $doxastic_modal | $temporal_instant
-// line 306: <ntf_logic_spec_list> :== <ntf_logic_spec> | <ntf_logic_spec>,<ntf_logic_spec_list>
-// line 307: <ntf_logic_spec> :== <ntf_domains_spec> | <ntf_designation_spec> | <ntf_terms_spec> | <ntf_modalities_spec> | <ntf_time_spec>
-// line 309: <ntf_domains_spec> :== $domains <identical> <ntf_domains_value>
-// line 310: <ntf_domains_value> :== <ntf_domain_type> | [<ntf_domain_type_list>]
-// line 311: <ntf_domain_type> :== $constant | $varying | $cumulative | $decreasing | <tff_atomic_type> <identical> <ntf_domains_value>
-// line 313: <ntf_domain_type_list> :== <ntf_domain_type> | <ntf_domain_type>,<ntf_domain_type_list>
-// line 314: <ntf_designation_spec> :== $designation <identical> <ntf_designation_value>
-// line 315: <ntf_designation_value> :== <ntf_designation_type> | [<ntf_designation_type_list>]
-// line 316: <ntf_designation_type> :== $rigid | $flexible | <tff_atomic_type> <identical> <ntf_designation_value>
-// line 318: <ntf_designation_type_list> :== <ntf_designation_type> | <ntf_designation_type>,<ntf_designation_type_list>
-// line 320: <ntf_terms_spec> :== $terms <identical> <ntf_terms_value>
-// line 321: <ntf_terms_value> :== <ntf_terms_type> | [<ntf_terms_type_list>]
-// line 322: <ntf_terms_type> :== $local | $global | <tff_atomic_type> <identical> <ntf_terms_value>
-// line 323: <ntf_terms_type_list> :== <ntf_terms_type> | <ntf_terms_type>,<ntf_terms_type_list>
-// line 324: <ntf_modalities_spec> :== $modalities <identical> <ntf_modalities_value>
-// line 325: <ntf_modalities_value> :== <ntf_modalities_type> | [<ntf_modalities_type_list>]
-// line 326: <ntf_modalities_type> :== <ntf_modal_system> | <ntf_modal_axiom> | <tff_atomic_type> <identical> <ntf_modalities_value>
-// line 328: <ntf_modalities_type_list> :== <ntf_modalities_type> | <ntf_modalities_type>,<ntf_modalities_type_list>
-// line 330: <ntf_time_spec> :== $time <identical> <ntf_time_value>
-// line 331: <ntf_time_value> :== <ntf_time_type> | [<ntf_time_type_list>]
-// line 332: <ntf_time_type> :== $reflexivity | $irreflexivity | $transitivity | $asymmetry | $anti_symmetry | $linearity | $forward_linearity | $backward_linearity | $beginning | $end | $no_beginning | $no_end | $density | $forward_discreteness | $backward_discreteness | <tff_atomic_type> <identical> <ntf_time_value>
-// line 337: <ntf_time_type_list> :== <ntf_time_type> | <ntf_time_type>,<ntf_time_type_list>
-// line 339: <ntf_modal_system> :== $modal_system_K | $modal_system_M | $modal_system_B | $modal_system_D | $modal_system_S4 | $modal_system_S5
-// line 341: <ntf_modal_axiom> :== $modal_axiom_K | $modal_axiom_M | $modal_axiom_B | $modal_axiom_D | $modal_axiom_4 | $modal_axiom_5
-// line 376: <fof_plain_atomic_formula> :== <proposition> | <predicate>(<fof_arguments>)
-// line 379: <fof_defined_plain_formula> :== <defined_proposition> | <defined_predicate>(<fof_arguments>)
-// line 450: <atomic_type> :== <type_constant> | <defined_type> | <system_type>
-// line 460: <defined_type> :== $oType | $o | $iType | $i | $tType | $real | $rat | $int
-// line 468: <proposition> :== <predicate>
-// line 469: <predicate> :== <atomic_word>
-// line 470: <defined_proposition> :== <defined_predicate>
-// line 471: <defined_proposition> :== $true | $false
-// line 472: <defined_predicate> :== <atomic_defined_word>
-// line 473: <defined_predicate> :== $distinct | $less | $lesseq | $greater | $greatereq | $is_int | $is_rat
-// line 478: <system_proposition> :== <system_predicate>
-// line 479: <system_predicate> :== <atomic_system_word>
-// line 487: <defined_functor> :== $uminus | $sum | $difference | $product | $quotient | $quotient_e | $quotient_t | $quotient_f | $remainder_e | $remainder_t | $remainder_f | $floor | $ceiling | $truncate | $round | $to_int | $to_rat | $to_real
-// line 514: <intro_type> :== definition | tautology | assumption | theory
-// line 531: <useful_info> :== [] | [<info_items>]
-// line 532: <info_items> :== <info_item><comma_info_item>*
-// line 533: <comma_info_item> :== ,<info_item>
-// line 534: <info_item> :== <formula_item> | <inference_item> | <general_function>
-// line 536: <formula_item> :== <description_item> | <iquote_item>
-// line 537: <description_item> :== description(<atomic_word>)
-// line 538: <iquote_item> :== iquote(<atomic_word>)
-// line 543: <inference_item> :== <inference_status> | <assumptions_record> | <new_symbol_record> | <refutation>
-// line 545: <inference_status> :== status(<status_value>) | <inference_info>
-// line 555: <status_value> :== suc | unp | sap | esa | sat | fsa | thm | eqv | tac | wec | eth | tau | wtc | wth | cax | sca | tca | wca | cup | csp | ecs | csa | cth | ceq | unc | wcc | ect | fun | uns | wuc | wct | scc | uca | noc
-// line 563: <inference_info> :== <inference_rule>(<atomic_word>,<general_list>)
-// line 566: <assumptions_record> :== assumptions([<name_list>])
-// line 569: <refutation> :== refutation(<file_source>)
-// line 571: <new_symbol_record> :== new_symbols(<atomic_word>,[<new_symbol_list>])
-// line 572: <new_symbol_list> :== <principal_symbol> | <principal_symbol>,<new_symbol_list>
-// line 574: <principal_symbol> :== <functor> | <variable>
-// line 590: <general_data> :== bind(<variable>,<formula_data>) | bind_type(<variable>,<bound_type>)
-// line 591: <bound_type> :== $thf(<thf_top_level_type>) | $tff(<tff_top_level_type>)
+// line 79: <formula_role> :== axiom | hypothesis | definition | assumption | lemma | theorem | corollary | conjecture | negated_conjecture | plain | type | interpretation | logic | unknown
+// line 181: <thf_unitary_type> :== <thf_atomic_type> | <th1_quantified_type>
+// line 182: <thf_atomic_type> :== <type_constant> | <defined_type> | <variable> | <thf_mapping_type> | (<thf_atomic_type>)
+// line 184: <th1_quantified_type> :== <type_quantifier> [<thf_variable_list>] : <thf_unitary_type>
+// line 242: <tff_plain_atomic> :== <proposition> | <predicate>(<tff_arguments>)
+// line 250: <tff_defined_plain> :== <defined_proposition> | <defined_predicate>(<tff_arguments>) | <nxf_atom> | <txf_conditional> | <txf_let>
+// line 258: <tff_system_atomic> :== <system_proposition> | <system_predicate>(<tff_arguments>)
+// line 260: <txf_conditional> :== $ite(<tff_logic_formula>,<tff_term>,<tff_term>)
+// line 318: <ntf_connective_name> :== $box | $dia | {$necessary} | {$possible} | {$obligatory} | {$permissible} | {$knows} | {$canKnow} | {$believes} | {$canBelieve}
+// line 328: <ntf_semantics_spec> :== <ntf_logic_name> <identical> [<ntf_logic_spec_list>]
+// line 329: <ntf_logic_name> :== $modal | $alethic_modal | $deontic_modal | $epistemic_modal | $doxastic_modal | $temporal_instant
+// line 331: <ntf_logic_spec_list> :== <ntf_logic_spec> | <ntf_logic_spec>,<ntf_logic_spec_list>
+// line 332: <ntf_logic_spec> :== <ntf_domains_spec> | <ntf_designation_spec> | <ntf_terms_spec> | <ntf_modalities_spec> | <ntf_time_spec>
+// line 334: <ntf_domains_spec> :== $domains <identical> <ntf_domains_value>
+// line 335: <ntf_domains_value> :== <ntf_domain_type> | [<ntf_domain_type_list>]
+// line 336: <ntf_domain_type> :== $constant | $varying | $cumulative | $decreasing | <tff_atomic_type> <identical> <ntf_domains_value>
+// line 338: <ntf_domain_type_list> :== <ntf_domain_type> | <ntf_domain_type>,<ntf_domain_type_list>
+// line 339: <ntf_designation_spec> :== $designation <identical> <ntf_designation_value>
+// line 340: <ntf_designation_value> :== <ntf_designation_type> | [<ntf_designation_type_list>]
+// line 341: <ntf_designation_type> :== $rigid | $flexible | <tff_atomic_type> <identical> <ntf_designation_value>
+// line 343: <ntf_designation_type_list> :== <ntf_designation_type> | <ntf_designation_type>,<ntf_designation_type_list>
+// line 345: <ntf_terms_spec> :== $terms <identical> <ntf_terms_value>
+// line 346: <ntf_terms_value> :== <ntf_terms_type> | [<ntf_terms_type_list>]
+// line 347: <ntf_terms_type> :== $local | $global | <tff_atomic_type> <identical> <ntf_terms_value>
+// line 348: <ntf_terms_type_list> :== <ntf_terms_type> | <ntf_terms_type>,<ntf_terms_type_list>
+// line 349: <ntf_modalities_spec> :== $modalities <identical> <ntf_modalities_value>
+// line 350: <ntf_modalities_value> :== <ntf_modalities_type> | [<ntf_modalities_type_list>]
+// line 351: <ntf_modalities_type> :== <ntf_modal_system> | <ntf_modal_axiom> | <tff_atomic_type> <identical> <ntf_modalities_value>
+// line 353: <ntf_modalities_type_list> :== <ntf_modalities_type> | <ntf_modalities_type>,<ntf_modalities_type_list>
+// line 355: <ntf_time_spec> :== $time <identical> <ntf_time_value>
+// line 356: <ntf_time_value> :== <ntf_time_type> | [<ntf_time_type_list>]
+// line 357: <ntf_time_type> :== $reflexivity | $irreflexivity | $transitivity | $asymmetry | $anti_symmetry | $linearity | $forward_linearity | $backward_linearity | $beginning | $end | $no_beginning | $no_end | $density | $forward_discreteness | $backward_discreteness | <tff_atomic_type> <identical> <ntf_time_value>
+// line 362: <ntf_time_type_list> :== <ntf_time_type> | <ntf_time_type>,<ntf_time_type_list>
+// line 364: <ntf_modal_system> :== $modal_system_K | $modal_system_KB | $modal_system_K4 | $modal_system_K5 | $modal_system_K45 | $modal_system_KB5 | $modal_system_D | $modal_system_DB | $modal_system_D4 | $modal_system_D5 | $modal_system_D45 | $modal_system_M | $modal_system_B | $modal_system_S4 | $modal_system_S5 | $modal_system_S5U
+// line 370: <ntf_modal_axiom> :== $modal_axiom_K | $modal_axiom_M | $modal_axiom_B | $modal_axiom_D | $modal_axiom_4 | $modal_axiom_5 | $modal_axiom_CD | $modal_axiom_BoxM | $modal_axiom_C4 | $modal_axiom_C
+// line 404: <fof_plain_atomic_formula> :== <proposition> | <predicate>(<fof_arguments>)
+// line 407: <fof_defined_plain_formula> :== <defined_proposition> | <defined_predicate>(<fof_arguments>)
+// line 478: <atomic_type> :== <type_constant> | <defined_type> | <system_type>
+// line 488: <defined_type> :== $oType | $o | $iType | $i | $tType | $real | $rat | $int
+// line 496: <proposition> :== <predicate>
+// line 497: <predicate> :== <atomic_word>
+// line 498: <defined_proposition> :== <defined_predicate>
+// line 499: <defined_proposition> :== $true | $false
+// line 500: <defined_predicate> :== <atomic_defined_word>
+// line 501: <defined_predicate> :== $distinct | $less | $lesseq | $greater | $greatereq | $is_int | $is_rat
+// line 507: <system_proposition> :== <system_predicate>
+// line 508: <system_predicate> :== <atomic_system_word>
+// line 516: <defined_functor> :== $uminus | $sum | $difference | $product | $quotient | $quotient_e | $quotient_t | $quotient_f | $remainder_e | $remainder_t | $remainder_f | $floor | $ceiling | $truncate | $round | $abs | $to_int | $to_rat | $to_real
+// line 543: <intro_type> :== definition | tautology | assumption | theory
+// line 560: <useful_info> :== [] | [<info_items>]
+// line 561: <info_items> :== <info_item><comma_info_item>*
+// line 562: <comma_info_item> :== ,<info_item>
+// line 563: <info_item> :== <formula_item> | <inference_item> | <general_function>
+// line 565: <formula_item> :== <description_item> | <iquote_item>
+// line 566: <description_item> :== description(<atomic_word>)
+// line 567: <iquote_item> :== iquote(<atomic_word>)
+// line 572: <inference_item> :== <inference_status> | <assumptions_record> | <new_symbol_record> | <refutation>
+// line 574: <inference_status> :== status(<status_value>) | <inference_info>
+// line 590: <inference_info> :== <inference_rule>(<atomic_word>,<general_list>)
+// line 593: <assumptions_record> :== assumptions([<name_list>])
+// line 596: <refutation> :== refutation(<file_source>)
+// line 598: <new_symbol_record> :== new_symbols(<atomic_word>,[<new_symbol_list>])
+// line 599: <new_symbol_list> :== <principal_symbol> | <principal_symbol>,<new_symbol_list>
+// line 601: <principal_symbol> :== <functor> | <variable>
+// line 617: <general_data> :== bind(<variable>,<formula_data>) | bind_type(<variable>,<bound_type>)
+// line 618: <bound_type> :== $thf(<thf_top_level_type>) | $tff(<tff_top_level_type>)
 
 // Lexer rules derived from ::- and ::: definitions.
 Single_quoted
@@ -1201,7 +1210,7 @@ Back_quoted
     ;
 
 Distinct_object
-    : Double_quote Do_char* Double_quote
+    : Double_quote Do_char Do_char* Double_quote
     ;
 
 Dollar_word
@@ -1325,7 +1334,7 @@ fragment Comment_block
     ;
 
 fragment Not_star_slash
-    : ( [^*]* [*] [*]* [^/*] )* [^*]*
+    : ( ~[*]* [*] [*]* ~[/*] )* ~[*]*
     ;
 
 fragment Percentage_sign
@@ -1353,7 +1362,7 @@ fragment Sq_char
     ;
 
 fragment Sign
-    : [+-]
+    : [+\-]
     ;
 
 fragment Dot
