@@ -72,5 +72,5 @@ The selected metagrammar must have its companion `BNFMetaLexer.g4` in the same d
 Run the charset conversion and generated-lexer checks from the repository root:
 
 ```bash
-python3 -m unittest discover -s ANTLRParsers/BNF2ANTLR -p 'test_*.py'
+python3 -m unittest discover -s ANTLRParsers/BNF2ANTLR/bnf2antlr_tests -p 'test_*.py'
 ```

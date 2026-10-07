@@ -10,7 +10,7 @@ import antlr4
 from antlr4.atn.PredictionMode import PredictionMode
 from antlr4.error.ErrorListener import ErrorListener
 
-import bnf2antlr_meta as converter
+from ANTLRParsers.BNF2ANTLR import bnf2antlr_meta as converter
 
 
 class CharsetTests(unittest.TestCase):
@@ -163,18 +163,18 @@ class CharsetTests(unittest.TestCase):
                 (r"\1\12\1234\78", [
                     ("OCTAL_ESCAPE", r"\1"), ("OCTAL_ESCAPE", r"\12"),
                     ("OCTAL_ESCAPE", r"\1234"),
-                    ("OCTAL_ESCAPE", r"\7"), ("CHARSET_CHARACTER", "8"),
+                    ("OCTAL_ESCAPE", r"\7"), ("CHARSET_CHAR", "8"),
                 ]),
                 (r"\000000123", [("OCTAL_ESCAPE", r"\000000123")]),
                 (r"\\\n", [
                     ("QUOTED_ESCAPE", escape)
                     for escape in (r"\\", r"\n")
                 ]),
-                (r"\]", [("CHARSET_CHARACTER", "\\"), ("RBRACKET", "]")]),
-                (r"\-", [("CHARSET_CHARACTER", "\\"), ("DASH", "-")]),
-                (r"\^", [("CHARSET_CHARACTER", "\\"), ("CHARSET_CHARACTER", "^")]),
-                (r"\q\8\x", [("CHARSET_CHARACTER", char) for char in r"\q\8\x"]),
-                ("\\", [("CHARSET_CHARACTER", "\\")]),
+                (r"\]", [("CHARSET_CHAR", "\\"), ("RBRACKET", "]")]),
+                (r"\-", [("CHARSET_CHAR", "\\"), ("DASH", "-")]),
+                (r"\^", [("CHARSET_CHAR", "\\"), ("CHARSET_CHAR", "^")]),
+                (r"\q\8\x", [("CHARSET_CHAR", char) for char in r"\q\8\x"]),
+                ("\\", [("CHARSET_CHAR", "\\")]),
             ]
             for content, expected in cases:
                 with self.subTest(content=content):
@@ -233,7 +233,7 @@ class CharsetTests(unittest.TestCase):
                         self.convert(f"<sample> ::: {charset}\n", Path(tmp), "Invalid")
 
     def test_full_syntax_bnf(self):
-        source = (converter.REPOSITORY_ROOT / "SyntaxBNF-v9.3.1.2").read_text()
+        source = converter.select_input_file().read_text()
         with tempfile.TemporaryDirectory(prefix="bnf-corpus-test-") as tmp:
             directory = Path(tmp)
             definitions, grammar = self.convert(source, directory, "Corpus")
