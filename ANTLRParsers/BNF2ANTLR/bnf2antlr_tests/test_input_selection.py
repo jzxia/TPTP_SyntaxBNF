@@ -25,49 +25,43 @@ class InputSelectionTests(unittest.TestCase):
         self.file("SyntaxBNF-a")
         self.file("SyntaxBNF-b")
         explicit = self.file("custom.bnf")
-        with patch("builtins.input", side_effect=AssertionError("unexpected prompt")):
-            self.assertEqual(converter.select_input_file(explicit, self.root), explicit)
+        with patch.object(converter, "REPOSITORY_ROOT", self.root), \
+                patch("builtins.input", side_effect=AssertionError("unexpected prompt")):
+            self.assertEqual(converter.select_input_file(explicit), explicit)
 
     def test_invalid_explicit_file_does_not_fall_back(self):
         self.file("SyntaxBNF-only")
         for path in (self.root / "missing.bnf", self.root):
-            with self.subTest(path=path):
+            with self.subTest(path=path), patch.object(converter, "REPOSITORY_ROOT", self.root):
                 with self.assertRaisesRegex(converter.ConversionError, "not a file"):
-                    converter.select_input_file(path, self.root)
+                    converter.select_input_file(path)
 
     def test_single_file_uses_prefix_without_version_requirement(self):
         expected = self.file("SyntaxBNF-custom.txt")
         self.file("unrelated.bnf")
         (self.root / "SyntaxBNF-directory").mkdir()
-        with patch("builtins.input", side_effect=AssertionError("unexpected prompt")):
-            self.assertEqual(converter.select_input_file(project_root=self.root), expected)
+        with patch.object(converter, "REPOSITORY_ROOT", self.root), \
+                patch("builtins.input", side_effect=AssertionError("unexpected prompt")):
+            self.assertEqual(converter.select_input_file(), expected)
 
     def test_no_root_file_rejects_nested_matches(self):
         nested = self.root / "nested"
         nested.mkdir()
         (nested / "SyntaxBNF-hidden").write_text("", encoding="utf-8")
         (self.root / "SyntaxBNF-directory").mkdir()
-        with self.assertRaisesRegex(converter.ConversionError, "No files beginning"):
-            converter.select_input_file(project_root=self.root)
+        with patch.object(converter, "REPOSITORY_ROOT", self.root):
+            with self.assertRaisesRegex(converter.ConversionError, "No files beginning"):
+                converter.select_input_file()
 
-    def test_multiple_files_require_a_valid_choice(self):
-        expected = self.file("SyntaxBNF-b")
-        self.file("SyntaxBNF-a")
-        diagnostics = StringIO()
-        with patch("builtins.input", side_effect=["word", "0", "3", "2"]), \
-                redirect_stderr(diagnostics):
-            self.assertEqual(converter.select_input_file(project_root=self.root), expected)
-        self.assertIn("1. SyntaxBNF-a", diagnostics.getvalue())
-        self.assertIn("2. SyntaxBNF-b", diagnostics.getvalue())
-
-    def test_unanswered_prompt_is_an_error(self):
-        self.file("SyntaxBNF-a")
+    def test_multiple_files_require_explicit_input(self):
         self.file("SyntaxBNF-b")
-        for error in (EOFError, KeyboardInterrupt):
-            with self.subTest(error=error), patch("builtins.input", side_effect=error), \
-                    redirect_stderr(StringIO()):
-                with self.assertRaisesRegex(converter.ConversionError, "No BNF file selected"):
-                    converter.select_input_file(project_root=self.root)
+        self.file("SyntaxBNF-a")
+        with patch.object(converter, "REPOSITORY_ROOT", self.root), \
+                patch("builtins.input", side_effect=AssertionError("unexpected prompt")):
+            with self.assertRaisesRegex(
+                    converter.ConversionError,
+                    "Multiple SyntaxBNF files found.*specify the input file explicitly"):
+                converter.select_input_file()
 
     def test_cli_output_only_discovers_input(self):
         self.file("SyntaxBNF-only", "automatic")
@@ -93,17 +87,21 @@ class InputSelectionTests(unittest.TestCase):
         self.assertIn("Generated from custom.bnf", output.read_text())
         self.assertIn("'explicit' EOF", output.read_text())
 
-    def test_cli_converts_the_users_choice(self):
+    def test_cli_multiple_inputs_reports_error_without_conversion(self):
         self.file("SyntaxBNF-a", "first")
         self.file("SyntaxBNF-b", "second")
         output = self.root / "TPTP.g4"
+        diagnostics = StringIO()
         with patch.object(converter, "REPOSITORY_ROOT", self.root), \
-                patch("builtins.input", return_value="2"), \
-                redirect_stdout(StringIO()), redirect_stderr(StringIO()):
+                patch("builtins.input", side_effect=AssertionError("unexpected prompt")), \
+                patch.object(converter, "parse_syntax_bnf") as parse, \
+                redirect_stdout(StringIO()), redirect_stderr(diagnostics):
             result = converter.main([str(output)])
-        self.assertEqual(result, 0)
-        self.assertIn("Generated from SyntaxBNF-b", output.read_text())
-        self.assertIn("'second' EOF", output.read_text())
+        self.assertEqual(result, 1)
+        self.assertIn("error: Multiple SyntaxBNF files found", diagnostics.getvalue())
+        self.assertIn("specify the input file explicitly", diagnostics.getvalue())
+        parse.assert_not_called()
+        self.assertFalse(output.exists())
 
     def test_cli_missing_input_reports_error_without_output(self):
         output = self.root / "TPTP.g4"

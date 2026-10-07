@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Convert the stable TPTP SyntaxBNF notation to an ANTLR4 combined grammar.
+"""Convert the stable TPTP SyntaxBNF notation to an ANTLR4 combined grammar
+(lexer rules and parser rules in one ANTLR .g4 file).
 
-::= defines parser rules, :== becomes comments, ::- defines tokens, and :::
-defines fragments (or tokens when referenced directly by parser rules).
+::= defines parser rules, :== becomes comments, ::- defines tokens,
+and ::: defines fragments (or tokens when referenced directly by parser rules).
 """
 
 import argparse
@@ -20,13 +21,32 @@ from antlr4.error.ErrorListener import ErrorListener
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_METAGRAMMAR = REPOSITORY_ROOT / "BNFMetagrammar/BNFMetaParser.g4"
+DEFAULT_METAGRAMMAR = REPOSITORY_ROOT / "BNFMetaGrammar/BNFMetaParser.g4"
 DEFAULT_ANTLR_JAR = REPOSITORY_ROOT / "ANTLRParsers/antlr-4.13.2-complete.jar"
+DEFAULT_OUTPUT_DIRECTORY = REPOSITORY_ROOT / "ANTLRParsers/ANTLRGrammar/converted_by_meta"
 OPERATOR_CHARACTERS = set("!#&*+-/:<=>?@^~|")
 
 
 class ConversionError(RuntimeError):
     """An invalid SyntaxBNF definition."""
+
+
+def select_input_file(input_path: Path | None = None) -> Path:
+    """Use an explicit file, or the sole SyntaxBNF* file in the repository root."""
+    if input_path is not None:
+        if not input_path.is_file():
+            raise ConversionError(f"BNF input is not a file: {input_path}")
+        return input_path
+
+    root = REPOSITORY_ROOT
+    candidates = [path for path in root.glob("SyntaxBNF*") if path.is_file()]
+    if len(candidates) == 0:
+        raise ConversionError(f"No files beginning with SyntaxBNF found in {root}")
+    if len(candidates) > 1:
+        raise ConversionError(
+            f"Multiple SyntaxBNF files found in {root}; specify the input file explicitly."
+        )
+    return candidates[0]
 
 
 class SyntaxErrors(ErrorListener):
@@ -253,26 +273,33 @@ class GrammarConverter:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("input", type=Path, help="SyntaxBNF input file")
-    parser.add_argument("output", type=Path, help="output directory or .g4 file")
-    parser.add_argument("--grammar-name", default="TPTP", help="grammar name (default: TPTP)")
+    parser.add_argument("input", type=Path, nargs="?",
+                        help="BNF input file (default: select the SyntaxBNF* file in repository root)")
+    parser.add_argument("output", type=Path, nargs="?",
+                        help="output directory or .g4 file (default: ANTLRParsers/ANTLRGrammar/converted_by_meta)")
+    parser.add_argument("--output-grammar-name", default="TPTP",
+                        help="output grammar name (default: TPTP)")
     parser.add_argument("--metagrammar", type=Path, default=DEFAULT_METAGRAMMAR)
     parser.add_argument("--antlr-jar", type=Path, default=DEFAULT_ANTLR_JAR)
     args = parser.parse_args(argv)
-    if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", args.grammar_name):
-        parser.error(f"invalid ANTLR grammar name: {args.grammar_name!r}")
+    # Preserve the output-only invocation when one positional argument is supplied.
+    if args.output is None:
+        args.input, args.output = None, args.input or DEFAULT_OUTPUT_DIRECTORY
+    if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", args.output_grammar_name):
+        parser.error(f"invalid ANTLR grammar name: {args.output_grammar_name!r}")
 
     try:
+        input_path = select_input_file(args.input)
         definitions, source, lexer = parse_syntax_bnf(
-            args.input, args.metagrammar.resolve(), args.antlr_jar.resolve(),
+            input_path, args.metagrammar.resolve(), args.antlr_jar.resolve(),
         )
         grammar = GrammarConverter(
-            definitions, source, lexer, args.grammar_name,
-            args.input.name, args.metagrammar.name,
+            definitions, source, lexer, args.output_grammar_name,
+            input_path.name, args.metagrammar.name,
         ).convert()
         output = args.output
         if output.suffix != ".g4":
-            output /= f"{args.grammar_name}.g4"
+            output /= f"{args.output_grammar_name}.g4"
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(grammar, encoding="utf-8")
     except (ConversionError, OSError, subprocess.CalledProcessError) as error:
