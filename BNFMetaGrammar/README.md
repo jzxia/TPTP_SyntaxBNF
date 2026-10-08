@@ -73,4 +73,60 @@ java -cp "../ANTLRParsers/antlr-4.13.2-complete.jar:." \
 ```
 
 For automatic input selection, use the
-[metagrammar-driven Python converter](../ANTLRParsers/BNF2ANTLR/README.md#metagrammar-driven-converter).
+[metagrammar-driven Python converter](#metagrammar-driven-converter).
+
+## Metagrammar-driven converter
+
+`BNF2ANTLR/bnf2antlr_meta.py` is the metagrammar-driven converter.
+It generates a temporary Python parser
+from `BNFMetaGrammar/BNFMetaParser.g4` and its companion `BNFMetaLexer.g4`,
+parses the complete SyntaxBNF document,
+and emits a combined ANTLR4 grammar.
+
+The converter follows the existing SyntaxBNF conventions directly:
+`TPTP_file` is the entry rule,
+`comment` tokens are skipped,
+and macros referenced by parser rules become tokens.
+It relies on the metagrammar to validate definitions
+and stops at the first syntax error.
+Charset conversion also checks range order and octal values.
+
+### How to run the metagrammar-driven converter
+
+Install the matching runtime once:
+
+```bash
+python3 -m pip install -r BNFMetaGrammar/BNF2ANTLR/requirements.txt
+```
+
+From the repository root, run the converter:
+
+```bash
+python3 BNFMetaGrammar/BNF2ANTLR/bnf2antlr_meta.py
+```
+
+By default, the converter takes as its input
+the file under the repository root whose name begins with `SyntaxBNF`,
+and generates `TPTP.g4` in the default output directory,
+`BNFMetaGrammar/ANTLRGrammar/converted_by_meta`.
+
+Alternatively, you can specify the input and output as follows:
+
+```bash
+python3 BNFMetaGrammar/BNF2ANTLR/bnf2antlr_meta.py \
+  /path/to/Syntax/BNF \
+  BNFMetaGrammar/ANTLRGrammar/CustomTPTP.g4 \
+  --output-grammar-name CustomTPTP
+```
+
+The converter requires Java and the repository's `ANTLRParsers/antlr-4.13.2-complete.jar`.
+Alternative metagrammar and jar paths can be selected with `--metagrammar` and `--antlr-jar`.
+The selected metagrammar must have its companion `BNFMetaLexer.g4` in the same directory.
+
+### How to test the metagrammar-driven converter
+
+Run the charset conversion and generated-lexer checks from the repository root:
+
+```bash
+python3 -m unittest discover -s BNFMetaGrammar/BNF2ANTLR/bnf2antlr_tests -p 'test_*.py'
+```

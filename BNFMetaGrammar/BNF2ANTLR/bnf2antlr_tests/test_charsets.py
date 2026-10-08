@@ -10,7 +10,7 @@ import antlr4
 from antlr4.atn.PredictionMode import PredictionMode
 from antlr4.error.ErrorListener import ErrorListener
 
-from ANTLRParsers.BNF2ANTLR import bnf2antlr_meta as converter
+from BNFMetaGrammar.BNF2ANTLR import bnf2antlr_meta as converter
 
 
 class CharsetTests(unittest.TestCase):

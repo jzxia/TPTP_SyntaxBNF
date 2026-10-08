@@ -23,7 +23,7 @@ from antlr4.error.ErrorListener import ErrorListener
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_METAGRAMMAR = REPOSITORY_ROOT / "BNFMetaGrammar/BNFMetaParser.g4"
 DEFAULT_ANTLR_JAR = REPOSITORY_ROOT / "ANTLRParsers/antlr-4.13.2-complete.jar"
-DEFAULT_OUTPUT_DIRECTORY = REPOSITORY_ROOT / "ANTLRParsers/ANTLRGrammar/converted_by_meta"
+DEFAULT_OUTPUT_DIRECTORY = REPOSITORY_ROOT / "BNFMetaGrammar/ANTLRGrammar/converted_by_meta"
 OPERATOR_CHARACTERS = set("!#&*+-/:<=>?@^~|")
 
 
@@ -276,7 +276,7 @@ def main(argv=None) -> int:
     parser.add_argument("input", type=Path, nargs="?",
                         help="BNF input file (default: select the SyntaxBNF* file in repository root)")
     parser.add_argument("output", type=Path, nargs="?",
-                        help="output directory or .g4 file (default: ANTLRParsers/ANTLRGrammar/converted_by_meta)")
+                        help="output directory or .g4 file (default: BNFMetaGrammar/ANTLRGrammar/converted_by_meta)")
     parser.add_argument("--output-grammar-name", default="TPTP",
                         help="output grammar name (default: TPTP)")
     parser.add_argument("--metagrammar", type=Path, default=DEFAULT_METAGRAMMAR)

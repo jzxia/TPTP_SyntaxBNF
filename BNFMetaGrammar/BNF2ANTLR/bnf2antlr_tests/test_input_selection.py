@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from ANTLRParsers.BNF2ANTLR import bnf2antlr_meta as converter
+from BNFMetaGrammar.BNF2ANTLR import bnf2antlr_meta as converter
 
 
 class InputSelectionTests(unittest.TestCase):
