@@ -1,3 +1,4 @@
+
 import os
 script_dir = os.path.dirname(os.path.abspath(__file__))
 import re
@@ -12,40 +13,7 @@ file_path = sys.argv[1]
 version = file_path.split("/")[-1].split("v")[-1].replace(".", "_")
 antlr_path = sys.argv[2]
 
-lexer_rules = {
-    "Or": "|",
-    "And": "&",
-    "Iff": "<=>",
-    "Impl": "=>",
-    "If": "<=",
-    "Niff": "<~>",
-    "Nor": "~|",
-    "Nand": "~&",
-    "Not": "~",
-    "ForallComb": "!!",
-    "TyForall": "!>",
-    "Infix_inequality": "!=",
-    "Infix_equality": "=",
-    "Forall": "!",
-    "ExistsComb": "??",
-    "TyExists": "?*",
-    "Exists": "?",
-    "Lambda": "^",
-    "ChoiceComb": "@@+",
-    "Choice": "@+",
-    "DescriptionComb": "@@-",
-    "Description": "@-",
-    "EqComb": "@=",
-    "App": "@",
-    "Assignment": "",
-    "Identical": "==",
-    "Arrow": ">",
-    "Star": "*",
-    "Plus": "+",
-    "Hash": "#",
-    "Subtype_sign": "<<",
-    "Gentzen_arrow": "-->",
-}
+lexer_rules = {'Or': '|', 'And': '&', 'Iff': '<=>', 'Impl': '=>', 'If': '<=', 'Niff': '<~>', 'Nor': '~|', 'Nand': '~&', 'Not': '~', 'ForallComb': '!!', 'TyForall': '!>', 'Infix_inequality': '!=', 'Infix_equality': '=', 'Forall': '!', 'ExistsComb': '??', 'TyExists': '?*', 'Exists': '?', 'Lambda': '^', 'ChoiceComb': '@@+', 'Choice': '@+', 'DescriptionComb': '@@-', 'Description': '@-', 'EqComb': '@=', 'App': '@', 'Assignment': '', 'Identical': '==', 'Arrow': '>', 'Star': '*', 'Plus': '+', 'Hash': '#', 'Subtype_sign': '<<', 'Gentzen_arrow': '-->'}
 
 
 def get_optional_rules():
@@ -84,6 +52,10 @@ Comment_line : '%' ~[\r\n]* -> skip;
 Comment_block : '/*' .*? '*/' -> skip;
 """
     
+    
+    
+   
+
     for line in lexer_rules.split("\n"):
         if line != "":
             new_lines.append(line.strip())
@@ -95,7 +67,7 @@ Comment_block : '/*' .*? '*/' -> skip;
 
     file.close()
 
-
+  
 def clean_up(bnf_lines):
     cleaned_bnf_text = []
     
@@ -163,10 +135,10 @@ def another_clean_up(raw_lines):
                 
     return raw_lines
 
-
-# comment is %
+#comment is %
 def convert_comment(line):
     return "//" + line
+
 
 
 # semantic rule is :==
@@ -221,6 +193,8 @@ def remove_quotes(line):
         return line.replace("''", "")
     else:
         return line
+
+
 
 
 #~ CONVERT RULES
@@ -414,6 +388,7 @@ def get_all_semantic_rules(bnf_lines):
 
 def main():
     
+    
     bnf_lines = read_bnf_file(file_path)
     antlr_lines = []
     token_rules = []
@@ -483,7 +458,7 @@ def main():
         write_antlr_file(antlr_lines)
         # write_antlr_file(antlr_lines, f"TPTP")
         print("bnf to antlr conversion complete")
-
+        
 def is_empty_line(line):
     return line.strip() == ""
 main()
