@@ -266,7 +266,7 @@ class CharsetTests(unittest.TestCase):
                         parser = module.CorpusParser(tokens)
                         for recognizer in (lexer, parser):
                             recognizer.removeErrorListeners()
-                            recognizer.addErrorListener(converter.SyntaxErrors())
+                            recognizer.addErrorListener(converter.SyntaxErrorListener())
                         tree = parser.tptp_file()
                         self.assertEqual(len(tree.tptp_input()), 1)
                         tokens.fill()
@@ -304,7 +304,7 @@ class CharsetTests(unittest.TestCase):
                 parser = module.ConvertedParser(antlr4.CommonTokenStream(lexer))
                 for recognizer in (lexer, parser):
                     recognizer.removeErrorListeners()
-                    recognizer.addErrorListener(converter.SyntaxErrors())
+                    recognizer.addErrorListener(converter.SyntaxErrorListener())
                 return parser.tptp_file()
 
             # Exercises operator grouping, exported macros, fragments, comments,

@@ -16,7 +16,8 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
-from antlr4 import CommonTokenStream, InputStream
+from antlr4 import InputStream as AntlrInputStream
+from antlr4 import CommonTokenStream as AntlrCommonTokenStream
 from antlr4.error.ErrorListener import ErrorListener as AntlrErrorListener
 
 
@@ -89,8 +90,8 @@ def parse_syntax_bnf(input_path: Path, metagrammar: Path, antlr_jar: Path):
         directory = Path(temporary)
         generate_metaparser(metagrammar, antlr_jar, directory)
         lexer_class, parser_class = import_generated_metaparser(directory)
-        lexer = lexer_class(InputStream(source))
-        parser = parser_class(CommonTokenStream(lexer))
+        lexer = lexer_class(AntlrInputStream(source))
+        parser = parser_class(AntlrCommonTokenStream(lexer))
         for recognizer in (lexer, parser):
             recognizer.removeErrorListeners()
             recognizer.addErrorListener(SyntaxErrorListener())
@@ -105,13 +106,11 @@ def parse_syntax_bnf(input_path: Path, metagrammar: Path, antlr_jar: Path):
 def lexer_name(name: str) -> str:
     return name[0].upper() + name[1:]
 
-
 def literal(text: str) -> str:
     escaped = text.translate(str.maketrans({
         "\\": r"\\", "'": r"\'", "\n": r"\n", "\r": r"\r", "\t": r"\t",
     }))
     return f"'{escaped}'"
-
 
 def format_rule(name: str, alternatives: list[str], command: str = "") -> str:
     lines = [name]
@@ -120,7 +119,6 @@ def format_rule(name: str, alternatives: list[str], command: str = "") -> str:
         lines.append(f"    {separator} {alternative}".rstrip())
     lines.append(f"    {command};")
     return "\n".join(lines) + "\n"
-
 
 def charset_char(char) -> tuple[int, str]:
     """Return the character's code point and its ANTLR spelling."""
@@ -135,7 +133,6 @@ def charset_char(char) -> tuple[int, str]:
         text = {r"\n": "\n", r"\r": "\r", r"\\": "\\"}[text]
     spelling = {"\\": r"\\", "\n": r"\n", "\r": r"\r", "[": r"\u005B"}.get(text, text)
     return ord(text), spelling
-
 
 def charset(char_set) -> str:
     if char_set.WILDCARD():
@@ -154,7 +151,6 @@ def charset(char_set) -> str:
     negation = "~" if char_set.NEGATED_LBRACKET() else ""
     return negation + "[" + "".join(parts) + "]"
 
-
 def regex_element(element) -> str:
     primary = element.regexPrimary()
     if primary.NONTERMINAL():
@@ -166,13 +162,11 @@ def regex_element(element) -> str:
     quantifier = element.regexQuantifier()
     return text + (quantifier.getText() if quantifier else "")
 
-
 def regex_alternatives(expression) -> list[str]:
     return [
         " ".join(regex_element(element) for element in alternative.regexElement())
         for alternative in expression.regexAlternative()
     ]
-
 
 def lexical_pattern(name: str, definitions: dict[str, Definition]) -> re.Pattern:
     """Match complete literal spellings against a SyntaxBNF lexical definition."""
@@ -233,12 +227,12 @@ class GrammarConverter:
         self.grammar_name = grammar_name
         self.source_name = source_name
         self.metagrammar_name = metagrammar_name
-        self.syntax = [d for d in definitions if d.operator == "::="]
-        self.semantic = [d for d in definitions if d.operator == ":=="]
-        self.lexical = [d for d in definitions if d.operator in ("::-", ":::")]
+        self.syntactic = [d for d in definitions if d.operator == "::="]
+        self.semantic  = [d for d in definitions if d.operator == ":=="]
+        self.lexical   = [d for d in definitions if d.operator in ("::-", ":::")]
         self.lexer_names = {d.name for d in self.lexical}
         self.bare_word = lexer_class.BARE_WORD
-        alternatives = [a for d in self.syntax for a in d.expression.syntaxAlternative()]
+        alternatives = [a for d in self.syntactic for a in d.expression.syntaxAlternative()]
         self.references = {
             element.NONTERMINAL().getText()[1:-1]
             for alternative in alternatives for element in alternative.syntaxElement()
@@ -263,7 +257,7 @@ class GrammarConverter:
                     word for word in candidates if pattern.fullmatch(word)
                 )
             if self.lower_word_literals:
-                occupied = {d.name.lower() for d in self.syntax}
+                occupied = {d.name.lower() for d in self.syntactic}
                 self.lower_word_wrapper = "lower_word_token"
                 suffix = 2
                 while self.lower_word_wrapper in occupied:
@@ -309,7 +303,7 @@ class GrammarConverter:
             "// ::- rules are tokens; ::: rules are lexer fragments unless\n"
             "// referenced directly by a parser rule.\n",
         ]
-        for index, definition in enumerate(self.syntax):
+        for index, definition in enumerate(self.syntactic):
             alternatives = [self.syntax_alternative(a)
                             for a in definition.expression.syntaxAlternative()]
             if index == 0 and definition.name == "TPTP_file":

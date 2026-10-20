@@ -106,18 +106,20 @@ python3 BNFMetaGrammar/BNF2ANTLR/bnf2antlr_meta.py
 ```
 
 By default, the converter takes as its input
-the file under the repository root whose name begins with `SyntaxBNF`,
+the file under the repository root whose name begins with `SyntaxBNF-v`,
 and generates `TPTP.g4` in the default output directory,
 `BNFMetaGrammar/ANTLRGrammar/converted_by_meta`.
 
-Alternatively, you can specify the input and output as follows:
+Alternatively, specify an input path and use `-o` to select the output path:
 
 ```bash
 python3 BNFMetaGrammar/BNF2ANTLR/bnf2antlr_meta.py \
   /path/to/Syntax/BNF \
-  BNFMetaGrammar/ANTLRGrammar/CustomTPTP.g4 \
+  -o BNFMetaGrammar/ANTLRGrammar/CustomTPTP.g4 \
   --output-grammar-name CustomTPTP
 ```
+
+The input path can be omitted when using `-o`; input selection then uses the default described above.
 
 The converter requires Java and the repository's `ANTLRParsers/antlr-4.13.2-complete.jar`.
 Alternative metagrammar and jar paths can be selected with `--metagrammar` and `--antlr-jar`.
