@@ -16,9 +16,8 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
-from antlr4 import InputStream as AntlrInputStream
-from antlr4 import CommonTokenStream as AntlrCommonTokenStream
-from antlr4.error.ErrorListener import ErrorListener as AntlrErrorListener
+import antlr4
+import antlr4.error.ErrorListener
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -40,7 +39,7 @@ class ConversionError(RuntimeError):
     failure, or an invalid SyntaxBNF definition.
     """
 
-class SyntaxErrorListener(AntlrErrorListener):
+class SyntaxErrorListener(antlr4.error.ErrorListener.ErrorListener):
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
         raise ConversionError(f"line {line}:{column}: {msg}")
 
@@ -90,8 +89,8 @@ def parse_syntax_bnf(input_path: Path, metagrammar: Path, antlr_jar: Path):
         directory = Path(temporary)
         generate_metaparser(metagrammar, antlr_jar, directory)
         lexer_class, parser_class = import_generated_metaparser(directory)
-        lexer = lexer_class(AntlrInputStream(source))
-        parser = parser_class(AntlrCommonTokenStream(lexer))
+        lexer = lexer_class(antlr4.InputStream(source))
+        parser = parser_class(antlr4.CommonTokenStream(lexer))
         for recognizer in (lexer, parser):
             recognizer.removeErrorListeners()
             recognizer.addErrorListener(SyntaxErrorListener())
