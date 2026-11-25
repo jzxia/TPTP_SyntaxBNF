@@ -261,3 +261,9 @@ intentional restriction of the broad `::=` grammar, not full enforcement of
 `:==` semantics: unknown dollar words can still parse. Symbols appearing only
 in semantic restrictions, such as `$true`, `$sum`, and `$ite`, do not create
 implicit tokens and already reach the parser as `Dollar_word`.
+
+## TFF grammar postprocessor
+
+The optional Trash-based postprocessor factors TFF rules in the generated ANTLR
+grammar to speed up parsing while preserving accepted input. See the
+[postprocessor README](BNF2ANTLR/postprocessor/README.md) for details.
